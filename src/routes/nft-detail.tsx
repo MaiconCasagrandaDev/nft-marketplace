@@ -1,9 +1,10 @@
 import { useNavigate, useParams, Link } from "@tanstack/react-router"
 import axios from "axios"
-import { Heart, Minus, Plus } from "lucide-react"
+import { Minus, Plus } from "lucide-react"
 import { useState } from "react"
 import { useAddToCart } from "@/features/cart/useCart"
 import { useNft } from "@/features/catalog/useNft"
+import { FavoriteButton } from "@/features/favorites/FavoriteButton"
 import { getApiError } from "@/lib/api"
 import { formatEth } from "@/lib/format"
 import { categoryLabels, networkLabels } from "@/lib/labels"
@@ -120,14 +121,7 @@ export function NftDetailPage() {
             {add.isPending ? "Adicionando..." : "COMPRAR"}
           </button>
 
-          <button
-            type="button"
-            disabled
-            title="Entre para favoritar"
-            className="flex items-center gap-2 rounded border border-brand px-4 py-2 opacity-60"
-          >
-            <Heart className="size-4" /> Favoritar
-          </button>
+          <FavoriteButton nftId={nft.id} nftName={nft.name} showLabel />
         </div>
 
         {message && (

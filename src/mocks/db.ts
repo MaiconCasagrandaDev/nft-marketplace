@@ -1,7 +1,7 @@
 import type { Nft } from "@/types/nft"
 import { nftsFixture } from "./data/nfts"
 
-const KEY = "kurio:mock-db:v2"
+const KEY = "kurio:mock-db:v3"
 
 export interface StoredUser {
   id: string
@@ -28,6 +28,7 @@ interface Db {
   carts: Record<string, StoredCart>
   users: StoredUser[]
   sessions: Record<string, Session>
+  favorites: Record<string, string[]>
 }
 
 // Senhas de teste (apenas o hash SHA-256 de "kurio:" + senha é guardado):
@@ -60,6 +61,7 @@ function seed(): Db {
     carts: {},
     users: structuredClone(seedUsers),
     sessions: {},
+    favorites: {},
   }
 }
 
