@@ -128,3 +128,30 @@
     @apply font-sans;
     }
 }
+
+:root {
+  --background: #140d0a;
+  --foreground: #f5f1eb;
+  --card: #241612;
+  --card-foreground: #f5f1eb;
+  --popover: #241612;
+  --popover-foreground: #f5f1eb;
+  --primary: #d28a4c;
+  --primary-foreground: #140d0a;
+  --secondary: #241612;
+  --secondary-foreground: #f5f1eb;
+  --muted: #241612;
+  --muted-foreground: #cfb28c;
+  --accent: #241612;
+  --accent-foreground: #e89b55;
+  --border: #4a2c1f;
+  --input: #4a2c1f;
+  --ring: #e89b55;
+}
+
+@theme inline {
+  --font-sans: "Roboto Mono Variable", ui-monospace, monospace;
+  --color-brand: #d28a4c;
+  --color-brand-hover: #e89b55;
+  --color-text-soft: #cfb28c;
+}
