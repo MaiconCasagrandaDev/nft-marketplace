@@ -1,7 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router"
-import { LogIn, Search, ShoppingCart } from "lucide-react"
+import { Search, ShoppingCart } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/features/cart/useCart"
+import { AccountMenu } from "@/features/auth/AccountMenu"
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -47,12 +48,7 @@ export function Header() {
               </span>
             )}
           </Link>
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded bg-brand px-3 py-1.5 text-sm font-bold text-primary-foreground hover:bg-brand-hover"
-          >
-            <LogIn className="size-4" /> Entrar
-          </button>
+          <AccountMenu />
         </div>
       </div>
     </header>

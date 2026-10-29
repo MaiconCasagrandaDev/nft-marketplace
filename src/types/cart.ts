@@ -20,4 +20,5 @@ export interface ApiError {
   code: string
   message: string
   available?: number
+  fields?: Record<string, string>
 }

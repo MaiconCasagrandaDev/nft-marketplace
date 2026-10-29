@@ -4,6 +4,9 @@ import { HomePage } from "@/routes/home"
 import { NftDetailPage } from "@/routes/nft-detail"
 import { catalogSearchSchema } from "@/lib/search"
 import { CartPage } from "@/routes/cart"
+import { authSearchSchema, redirectIfAuthed, requireAuth } from "@/lib/guards"
+import { LoginPage } from "@/routes/login"
+import { RegisterPage } from "@/routes/register"
 
 function NotFound() {
   return (
@@ -40,10 +43,34 @@ const cartRoute = createRoute({
 const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/checkout",
+  beforeLoad: requireAuth,
   component: () => <p className="py-8">Checkout em construção</p>,
 })
 
-const routeTree = rootRoute.addChildren([homeRoute, nftRoute, cartRoute, checkoutRoute])
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/login",
+  validateSearch: authSearchSchema,
+  beforeLoad: redirectIfAuthed,
+  component: LoginPage,
+})
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/register",
+  validateSearch: authSearchSchema,
+  beforeLoad: redirectIfAuthed,
+  component: RegisterPage,
+})
+
+const routeTree = rootRoute.addChildren([
+  homeRoute,
+  nftRoute,
+  cartRoute,
+  checkoutRoute,
+  loginRoute,
+  registerRoute,
+])
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" })
 
