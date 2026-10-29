@@ -64,8 +64,8 @@ export function useOrder(id: string) {
   return useQuery({
     queryKey: orderKey(id),
     queryFn: async ({ signal }) => (await api.get<Order>(`/orders/${id}`, { signal })).data,
-    // pedido pendente é consultado até a simulação responder
-    refetchInterval: (query) => (query.state.data?.status === "pending" ? 1000 : false),
+    // o socket avisa a mudança; a consulta periódica é só reserva
+    refetchInterval: (query) => (query.state.data?.status === "pending" ? 4000 : false),
     retry: (count, error) =>
       !(axios.isAxiosError(error) && error.response?.status === 404) && count < 2,
   })

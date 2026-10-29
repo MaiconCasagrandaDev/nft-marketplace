@@ -2,8 +2,11 @@ import { Outlet } from "@tanstack/react-router"
 import { Header } from "./Header"
 import { Footer } from "./Footer"
 import { SessionGuard } from "@/features/auth/SessionGuard"
+import { LiveNotices } from "@/features/realtime/LiveNotices"
+import { useRealtime } from "@/features/realtime/useRealtime"
 
 export function Layout() {
+  useRealtime()
   return (
     <div className="min-h-screen">
       <SessionGuard />
@@ -12,6 +15,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <LiveNotices />
     </div>
   )
 }

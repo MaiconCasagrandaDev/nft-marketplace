@@ -1,6 +1,7 @@
-import type { Quote } from "@/types/checkout"
+import type { Order, Quote } from "@/types/checkout"
 import { buildCart } from "./cartHandlers"
 import { getDb, save, type StoredOrder } from "./db"
+import { emitNftUpdated, emitOrderUpdated } from "./realtime"
 import { scenarios } from "./scenarios"
 
 export const SETTLE_MS = 2500
@@ -36,11 +37,17 @@ export function txHashFor(orderId: string) {
   return "0x" + Array.from({ length: 8 }, (_, i) => hash(`${orderId}:${i}`)).join("")
 }
 
+function toPublic(order: StoredOrder): Order {
+  const { userId: _userId, ...rest } = order
+  return rest
+}
+
 function reject(order: StoredOrder, code: string, message: string) {
   order.status = "rejected"
   order.reason = { code, message }
   order.updatedAt = new Date().toISOString()
   save()
+  emitOrderUpdated(order.userId, toPublic(order))
 }
 
 export function settle(order: StoredOrder) {
@@ -61,11 +68,14 @@ export function settle(order: StoredOrder) {
     return reject(order, "OUT_OF_STOCK", `${short.name} não tem mais unidades suficientes.`)
   }
 
+  const changed: { nft: (typeof db.nfts)[number]; previous: { price: string; available: number } }[] = []
   for (const item of order.items) {
     const nft = db.nfts.find((n) => n.id === item.nftId)
     if (!nft) continue
+    const previous = { price: nft.price, available: nft.available }
     nft.available -= item.quantity
     nft.version += 1
+    changed.push({ nft, previous })
   }
 
   // remove do carrinho apenas o que foi comprado
@@ -88,6 +98,9 @@ export function settle(order: StoredOrder) {
   }
   order.updatedAt = new Date().toISOString()
   save()
+
+  for (const { nft, previous } of changed) emitNftUpdated(nft, previous)
+  emitOrderUpdated(order.userId, toPublic(order))
 }
 
 // Liquidação preguiçosa: sobrevive a refresh, pois depende só de timestamps salvos

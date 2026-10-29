@@ -52,6 +52,7 @@ export function CheckoutPage() {
   const [connectError, setConnectError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [reviewedQuoteId, setReviewedQuoteId] = useState<string | null>(null)
 
   const {
     register,
@@ -125,6 +126,8 @@ export function CheckoutPage() {
   }
 
   const selectedWallet = wallets.data.find((w) => w.id === values.walletId)
+  // a cotação mudou depois que o usuário revisou: exige nova confirmação
+  const changed = step === "review" && reviewedQuoteId !== null && reviewedQuoteId !== q.quoteId
 
   function onConnect() {
     setConnectError(null)
@@ -157,9 +160,16 @@ export function CheckoutPage() {
       setNotice("A disponibilidade de algum item mudou. Ajuste o carrinho antes de continuar.")
     }
     setStep("review")
+    setReviewedQuoteId(fresh.quoteId)
   }
 
   function onConfirm() {
+    if (changed) {
+      // o usuário reconhece os novos valores antes de poder enviar
+      setReviewedQuoteId(q.quoteId)
+      setNotice(null)
+      return
+    }
     setNotice(null)
     setSubmitError(null)
     const v = getValues()
@@ -360,6 +370,13 @@ export function CheckoutPage() {
               </div>
             </dl>
 
+            {changed && (
+              <p role="alert" className="border border-brand p-3 text-sm">
+                Os valores do pedido mudaram. Confira o resumo ao lado e confirme os novos valores
+                para continuar.
+              </p>
+            )}
+
             {submitError && (
               <p role="alert" className="text-sm text-red-400">
                 {submitError}
@@ -375,9 +392,11 @@ export function CheckoutPage() {
               >
                 {createOrder.isPending
                   ? "Enviando pedido..."
-                  : submitError
-                    ? "Tentar novamente"
-                    : "Confirmar pedido"}
+                  : changed
+                    ? "Confirmar novos valores"
+                    : submitError
+                      ? "Tentar novamente"
+                      : "Confirmar pedido"}
               </button>
               <button
                 type="button"
