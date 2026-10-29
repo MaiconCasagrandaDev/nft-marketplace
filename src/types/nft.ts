@@ -43,3 +43,9 @@ export interface Paginated<T> {
   pageSize: number
   total: number
 }
+
+export interface Facets {
+  categories: Record<Category, number>
+  networks: Record<Network, number>
+  priceRange: { min: string; max: string }
+}

@@ -1,6 +1,6 @@
 import Decimal from "decimal.js"
 import { delay, http, HttpResponse } from "msw"
-import type { Nft, Paginated } from "@/types/nft"
+import type { Category, Facets, Network, Nft, Paginated } from "@/types/nft"
 import { nftsFixture } from "./data/nfts"
 
 const PAGE_SIZE = 9
@@ -37,6 +37,26 @@ export const handlers = [
       page,
       pageSize: PAGE_SIZE,
       total: items.length,
+    }
+    return HttpResponse.json(body)
+  }),
+
+  http.get("/api/nfts/facets", async () => {
+    await delay(150)
+    const categories = {} as Record<Category, number>
+    const networks = {} as Record<Network, number>
+    for (const n of nftsFixture) {
+      categories[n.category] = (categories[n.category] ?? 0) + 1
+      networks[n.network] = (networks[n.network] ?? 0) + 1
+    }
+    const prices = nftsFixture.map((n) => new Decimal(n.price))
+    const body: Facets = {
+      categories,
+      networks,
+      priceRange: {
+        min: Decimal.min(...prices).toString(),
+        max: Decimal.max(...prices).toString(),
+      },
     }
     return HttpResponse.json(body)
   }),

@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 const text = z.union([z.string(), z.number()]).transform(String)
+const decimal = text.refine((v) => /^\d+(\.\d+)?$/.test(v))
 
 export const catalogSearchSchema = z.object({
   q: text.optional().catch(undefined),
@@ -12,6 +13,8 @@ export const catalogSearchSchema = z.object({
     .optional()
     .catch(undefined),
   network: z.enum(["ethereum", "polygon", "solana"]).optional().catch(undefined),
+  minPrice: decimal.optional().catch(undefined),
+  maxPrice: decimal.optional().catch(undefined),
   sort: z.enum(["recent", "price-asc", "price-desc"]).optional().catch(undefined),
   page: z.coerce.number().int().min(1).optional().catch(undefined),
 })
