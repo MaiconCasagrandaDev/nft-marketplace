@@ -39,7 +39,7 @@ function build(
     image: `/nfts/${data.image}`,
     description:
       "Um colecionável digital finalizado à mão da coleção Kurio Editions, verificado na rede, com arte desbloqueável e acesso para colecionadores.",
-    available: index % 7 === 0 ? 0 : ((index * 3) % 9) + 2,
+    available: index >= 9 && index % 7 === 0 ? 0 : ((index * 3) % 9) + 2,
     version: 1,
     createdAt: new Date(Date.UTC(2026, 6, 28 - index)).toISOString(),
   }
