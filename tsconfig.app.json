@@ -21,6 +21,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Strict (exigido pelo TanStack Router) */
+    "strict": true,
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
