@@ -1,11 +1,13 @@
 import { setupWorker } from "msw/browser"
 import { authHandlers } from "./authHandlers"
 import { cartHandlers } from "./cartHandlers"
+import { contentHandlers } from "./contentHandlers"
 import { expireSessions, resetDb } from "./db"
 import { favoriteHandlers } from "./favoriteHandlers"
 import { handlers } from "./handlers"
-import { scenarios, type ScenarioName } from "./scenarios"
-import { contentHandlers } from "./contentHandlers"
+import { orderHandlers } from "./orderHandlers"
+import { scenarios, type ScenarioName, type Scenarios } from "./scenarios"
+import { walletHandlers } from "./walletHandlers"
 
 export const worker = setupWorker(
   ...handlers,
@@ -13,6 +15,8 @@ export const worker = setupWorker(
   ...authHandlers,
   ...favoriteHandlers,
   ...contentHandlers,
+  ...walletHandlers,
+  ...orderHandlers,
 )
 
 declare global {
@@ -20,7 +24,7 @@ declare global {
     kurioMock?: {
       reset: () => void
       expireSessions: () => void
-      setScenario: (name: ScenarioName, value: boolean) => void
+      setScenario: <K extends ScenarioName>(name: K, value: Scenarios[K]) => void
     }
   }
 }

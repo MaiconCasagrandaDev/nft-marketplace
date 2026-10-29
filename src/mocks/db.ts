@@ -1,7 +1,8 @@
 import type { Nft } from "@/types/nft"
+import type { Order, Wallet } from "@/types/checkout"
 import { nftsFixture } from "./data/nfts"
 
-const KEY = "kurio:mock-db:v3"
+const KEY = "kurio:mock-db:v4"
 
 export interface StoredUser {
   id: string
@@ -12,6 +13,8 @@ export interface StoredUser {
   avatarUrl: string | null
   passwordHash: string
 }
+
+export type StoredOrder = Order & { userId: string }
 
 interface StoredCart {
   items: { nftId: string; quantity: number }[]
@@ -29,6 +32,9 @@ interface Db {
   users: StoredUser[]
   sessions: Record<string, Session>
   favorites: Record<string, string[]>
+  wallets: Record<string, Wallet[]>
+  orders: StoredOrder[]
+  idempotency: Record<string, { fingerprint: string; orderId: string }>
 }
 
 // Senhas de teste (apenas o hash SHA-256 de "kurio:" + senha é guardado):
@@ -55,6 +61,34 @@ const seedUsers: StoredUser[] = [
   },
 ]
 
+const seedWallets: Record<string, Wallet[]> = {
+  u1: [
+    {
+      id: "w1",
+      label: "Carteira principal",
+      address: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+      network: "ethereum",
+      primary: true,
+    },
+    {
+      id: "w2",
+      label: "Carteira secundária",
+      address: "0x9a1D3e5F7b2C4d6E8f0A1b3C5d7E9f1A2b4C6d8E",
+      network: "polygon",
+      primary: false,
+    },
+  ],
+  u2: [
+    {
+      id: "w3",
+      label: "Carteira principal",
+      address: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db",
+      network: "ethereum",
+      primary: true,
+    },
+  ],
+}
+
 function seed(): Db {
   return {
     nfts: structuredClone(nftsFixture),
@@ -62,6 +96,9 @@ function seed(): Db {
     users: structuredClone(seedUsers),
     sessions: {},
     favorites: {},
+    wallets: structuredClone(seedWallets),
+    orders: [],
+    idempotency: {},
   }
 }
 
