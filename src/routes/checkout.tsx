@@ -4,7 +4,6 @@ import { Link, useRouter } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { AuthField } from "@/features/auth/AuthField"
 import { useSession } from "@/features/auth/useAuth"
 import {
   errorQuote,
@@ -25,9 +24,7 @@ const networks = Object.keys(networkLabels) as [Network, ...Network[]]
 const schema = z.object({
   fullName: z.string().trim().min(3, "Informe o nome completo"),
   email: z.string().min(1, "Informe o e-mail").email("E-mail inválido"),
-  phone: z
-    .string()
-    .refine((v) => v === "" || /^[+\d][\d\s()-]{7,}$/.test(v), "Telefone inválido"),
+  phone: z.string(),
   walletId: z.string().min(1, "Selecione uma carteira"),
   network: z.enum(networks),
 })
@@ -37,6 +34,25 @@ const shortAddress = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`
 const button =
   "rounded bg-brand px-5 py-2 text-sm font-bold text-primary-foreground hover:bg-brand-hover disabled:opacity-60"
 const ghost = "rounded border border-brand px-5 py-2 text-sm font-bold text-brand hover:text-brand-hover"
+const input = "h-10 w-full border border-border bg-background px-3 text-sm"
+const cell = "grid content-start gap-1.5"
+const label = "text-sm"
+
+function Star() {
+  return <span className="text-brand"> *</span>
+}
+
+function Breadcrumb() {
+  return (
+    <nav aria-label="Navegação" className="pt-8 text-sm font-bold">
+      <Link to="/" className="hover:text-brand-hover">Início</Link>
+      {" / "}
+      <Link to="/" hash="catalogo" className="hover:text-brand-hover">Mercado</Link>
+      {" / "}
+      <span>Pagamento</span>
+    </nav>
+  )
+}
 
 export function CheckoutPage() {
   const router = useRouter()
@@ -88,9 +104,12 @@ export function CheckoutPage() {
 
   if (quote.isPending || wallets.isPending) {
     return (
-      <div className="grid gap-8 py-8 lg:grid-cols-[1fr_380px]" aria-busy="true">
-        <div className="shimmer h-96 bg-card" />
-        <div className="shimmer h-64 bg-card" />
+      <div>
+        <Breadcrumb />
+        <div className="grid gap-8 py-6 lg:grid-cols-[1fr_405px]" aria-busy="true">
+          <div className="shimmer h-96 bg-card" />
+          <div className="shimmer h-64 bg-card" />
+        </div>
       </div>
     )
   }
@@ -128,6 +147,13 @@ export function CheckoutPage() {
   const selectedWallet = wallets.data.find((w) => w.id === values.walletId)
   // a cotação mudou depois que o usuário revisou: exige nova confirmação
   const changed = step === "review" && reviewedQuoteId !== null && reviewedQuoteId !== q.quoteId
+
+  function pickWallet(id: string) {
+    const picked = wallets.data?.find((x) => x.id === id)
+    setValue("walletId", id, { shouldValidate: true })
+    if (picked) setValue("network", picked.network)
+    setConnectError(null)
+  }
 
   function onConnect() {
     setConnectError(null)
@@ -216,74 +242,309 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="grid gap-8 py-8 lg:grid-cols-[1fr_380px]">
-      <div className="grid content-start gap-6">
-        <h1 className="text-2xl font-bold">Pagamento</h1>
+    <div>
+      <Breadcrumb />
 
-        {notice && (
-          <p role="alert" className="border border-brand p-3 text-sm">
-            {notice}
-          </p>
-        )}
+      <div className="grid gap-10 pb-16 pt-6 lg:grid-cols-[1fr_405px] lg:gap-[30px]">
+        <div className="grid content-start gap-6">
+          {notice && (
+            <p role="alert" className="border border-brand p-3 text-sm">
+              {notice}
+            </p>
+          )}
 
-        {step === "form" && (
-          <form onSubmit={handleSubmit(onReview)} noValidate className="grid gap-6">
-            <section aria-labelledby="c-dados" className="grid gap-4 bg-card p-6">
-              <h2 id="c-dados" className="text-lg font-bold">
-                Dados do colecionador
-              </h2>
-              <AuthField
-                id="fullName"
-                label="Nome completo"
-                autoComplete="name"
-                error={errors.fullName?.message}
-                {...register("fullName")}
-              />
-              <AuthField
-                id="email"
-                label="E-mail"
-                type="email"
-                autoComplete="email"
-                error={errors.email?.message}
-                {...register("email")}
-              />
-              <AuthField
-                id="phone"
-                label="Telefone (opcional)"
-                type="tel"
-                autoComplete="tel"
-                error={errors.phone?.message}
-                {...register("phone")}
-              />
+          {step === "form" && (
+            <section aria-labelledby="c-perfil" className="grid gap-5">
+              <h1 id="c-perfil" className="text-base font-bold">
+                Perfil do colecionador
+              </h1>
+              <form
+                id="checkout-form"
+                onSubmit={handleSubmit(onReview)}
+                noValidate
+                className="grid gap-x-6 gap-y-5 sm:grid-cols-2"
+              >
+                <div className={cell}>
+                  <label htmlFor="fullName" className={label}>
+                    Nome de exibição<Star />
+                  </label>
+                  <input
+                    id="fullName"
+                    autoComplete="name"
+                    aria-invalid={!!errors.fullName}
+                    className={input}
+                    {...register("fullName")}
+                  />
+                  {errors.fullName && (
+                    <p role="alert" className="text-sm text-red-400">{errors.fullName.message}</p>
+                  )}
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="username" className={label}>Nome de usuário</label>
+                  <input id="username" name="username" autoComplete="username" className={input} />
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="network" className={label}>
+                    Rede<Star />
+                  </label>
+                  <select
+                    id="network"
+                    className={input}
+                    {...register("network", { onChange: () => setConnectError(null) })}
+                  >
+                    {networks.map((n) => (
+                      <option key={n} value={n}>
+                        {networkLabels[n]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="profile" className={label}>Nome do perfil</label>
+                  <input id="profile" name="profile" className={input} />
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="address" className={label}>
+                    Endereço da carteira<Star />
+                  </label>
+                  <input
+                    id="address"
+                    readOnly
+                    aria-readonly="true"
+                    value={selectedWallet?.address ?? ""}
+                    placeholder="Endereço 0x da carteira"
+                    className={input}
+                  />
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="secondary" className="sr-only">
+                    ENS ou carteira secundária (opcional)
+                  </label>
+                  <input
+                    id="secondary"
+                    name="secondary"
+                    placeholder="ENS ou carteira secundária (opcional)"
+                    className={`${input} sm:mt-[26px]`}
+                  />
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="walletType" className={label}>
+                    Tipo de carteira<Star />
+                  </label>
+                  <select
+                    id="walletType"
+                    className={input}
+                    value={values.walletId}
+                    onChange={(e) => pickWallet(e.target.value)}
+                  >
+                    {wallets.data.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="referral" className={label}>Código de indicação</label>
+                  <input id="referral" name="referral" className={input} />
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="email" className={label}>
+                    E-mail<Star />
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    aria-invalid={!!errors.email}
+                    className={input}
+                    {...register("email")}
+                  />
+                  {errors.email && (
+                    <p role="alert" className="text-sm text-red-400">{errors.email.message}</p>
+                  )}
+                </div>
+
+                <div className={cell}>
+                  <label htmlFor="ens" className={label}>Nome ENS</label>
+                  <select id="ens" name="ens" className="h-10 w-[78px] border border-border bg-background px-2 text-sm">
+                    <option>.eth</option>
+                  </select>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                  <input type="checkbox" name="otherWallet" className="size-4 accent-[#D28A4C]" />
+                  Usar outra carteira?
+                </label>
+
+                <div className={`${cell} sm:col-span-2`}>
+                  <label htmlFor="note" className={label}>
+                    Observação do colecionador (opcional)
+                  </label>
+                  <textarea
+                    id="note"
+                    name="note"
+                    className="h-36 w-full max-w-[350px] border border-border bg-background p-3 text-sm"
+                  />
+                </div>
+              </form>
             </section>
+          )}
 
-            <section aria-labelledby="c-carteira" className="grid gap-4 bg-card p-6">
-              <h2 id="c-carteira" className="text-lg font-bold">
+          {step === "review" && (
+            <section aria-labelledby="c-revisao" className="grid gap-4 bg-card p-6">
+              <h2 id="c-revisao" className="text-lg font-bold">
+                Revisão do pedido
+              </h2>
+              <dl className="grid gap-2 text-sm">
+                <div>
+                  <dt className="text-text-soft">Colecionador</dt>
+                  <dd>
+                    {values.fullName} · {values.email}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-text-soft">Carteira</dt>
+                  <dd>
+                    {selectedWallet?.label} ({selectedWallet && shortAddress(selectedWallet.address)})
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-text-soft">Rede</dt>
+                  <dd>{networkLabels[values.network]}</dd>
+                </div>
+              </dl>
+
+              {changed && (
+                <p role="alert" className="border border-brand p-3 text-sm">
+                  Os valores do pedido mudaram. Confira o resumo ao lado e confirme os novos valores
+                  para continuar.
+                </p>
+              )}
+
+              {submitError && (
+                <p role="alert" className="text-sm text-red-400">
+                  {submitError}
+                </p>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={onConfirm}
+                  disabled={createOrder.isPending || q.issues.length > 0}
+                  className={button}
+                >
+                  {createOrder.isPending
+                    ? "Enviando pedido..."
+                    : changed
+                      ? "Confirmar novos valores"
+                      : submitError
+                        ? "Tentar novamente"
+                        : "Confirmar compra"}
+                </button>
+                <button
+                  type="button"
+                  className={ghost}
+                  disabled={createOrder.isPending}
+                  onClick={() => {
+                    setStep("form")
+                    setNotice(null)
+                    setSubmitError(null)
+                  }}
+                >
+                  Editar dados
+                </button>
+                {q.issues.length > 0 && (
+                  <Link to="/cart" className={ghost}>
+                    Ajustar carrinho
+                  </Link>
+                )}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <aside aria-label="Resumo do pedido" className="grid content-start gap-4">
+          <h2 className="text-base font-bold">Seus NFTs</h2>
+
+          <div className="flex justify-between border-b border-border pb-2 text-sm font-bold">
+            <span>NFTs</span>
+            <span>Subtotal</span>
+          </div>
+
+          <ul className="grid gap-3">
+            {q.items.map((l) => {
+              const issue = q.issues.find((i) => i.nftId === l.nft.id)
+              return (
+                <li key={l.nft.id} className="grid grid-cols-[64px_1fr_auto] items-center gap-3 bg-card p-1.5">
+                  <img src={l.nft.image} alt={l.nft.name} className="size-16 rounded object-cover" />
+                  <div className="min-w-0 text-sm">
+                    <p className="font-bold">{l.nft.name}</p>
+                    <p className="text-xs text-text-soft">ID do token: {l.nft.tokenId}</p>
+                    {issue && (
+                      <p role="alert" className="text-xs text-red-400">
+                        {issue.code === "UNAVAILABLE" ? "Indisponível" : `Restam apenas ${issue.available}`}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-right text-sm">
+                    <span className="text-text-soft">(x {l.quantity})</span>{" "}
+                    <span className="font-bold text-brand">{formatEth(l.lineTotal)} ETH</span>
+                  </p>
+                </li>
+              )
+            })}
+          </ul>
+
+          <p className="text-center text-sm">
+            Tem um código promocional?{" "}
+            <Link to="/cart" className="text-brand hover:text-brand-hover">
+              Aplique aqui
+            </Link>
+          </p>
+
+          <Totals
+            subtotal={q.subtotal}
+            discount={q.discount}
+            networkFee={q.networkFee}
+            total={q.total}
+            couponCode={q.coupon?.code}
+          />
+
+          {step === "form" && (
+            <section aria-labelledby="c-carteira" className="grid gap-3">
+              <h2 id="c-carteira" className="text-center text-base font-bold">
                 Carteira e rede
               </h2>
 
               <fieldset className="grid gap-2">
-                <legend className="mb-1 text-sm font-medium">Carteira</legend>
+                <legend className="sr-only">Carteira</legend>
                 {wallets.data.map((w) => (
                   <label
                     key={w.id}
-                    className="flex cursor-pointer items-center gap-3 border border-border p-3 has-[:checked]:border-brand"
+                    className="flex cursor-pointer items-center gap-3 border border-border p-3 has-[:checked]:border-white"
                   >
                     <input
                       type="radio"
                       value={w.id}
+                      className="accent-[#D28A4C]"
                       {...register("walletId", {
-                        onChange: (e: { target: { value: string } }) => {
-                          const picked = wallets.data.find((x) => x.id === e.target.value)
-                          if (picked) setValue("network", picked.network)
-                          setConnectError(null)
-                        },
+                        onChange: (e: { target: { value: string } }) => pickWallet(e.target.value),
                       })}
                     />
                     <span>
                       <span className="block text-sm font-bold">
                         {w.label}
-                        {w.primary && " (principal)"}
+                        {w.primary && !/principal/i.test(w.label) && " (principal)"}
                       </span>
                       <span className="block text-xs text-text-soft">
                         {shortAddress(w.address)} · {networkLabels[w.network]}
@@ -298,158 +559,32 @@ export function CheckoutPage() {
                 )}
               </fieldset>
 
-              <div className="grid gap-1.5">
-                <label htmlFor="network" className="text-sm font-medium">
-                  Rede
-                </label>
-                <select
-                  id="network"
-                  className="bg-background px-3 py-2 text-sm"
-                  {...register("network", { onChange: () => setConnectError(null) })}
-                >
-                  {networks.map((n) => (
-                    <option key={n} value={n}>
-                      {networkLabels[n]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={onConnect}
-                  disabled={!values.walletId || connect.isPending || connected}
-                  className={ghost}
-                >
-                  {connect.isPending ? "Conectando..." : connected ? "Carteira conectada" : "Conectar carteira"}
-                </button>
-                {connected && selectedWallet && (
-                  <span role="status" className="text-sm text-brand">
-                    {shortAddress(selectedWallet.address)} conectada
-                  </span>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={onConnect}
+                disabled={!values.walletId || connect.isPending || connected}
+                className={`${ghost} w-full`}
+              >
+                {connect.isPending ? "Conectando..." : connected ? "Carteira conectada" : "Conectar carteira"}
+              </button>
+              {connected && selectedWallet && (
+                <p role="status" className="text-center text-sm text-brand">
+                  {shortAddress(selectedWallet.address)} conectada
+                </p>
+              )}
               {connectError && (
                 <p role="alert" className="text-sm text-red-400">
                   {connectError}
                 </p>
               )}
-            </section>
 
-            <div>
-              <button type="submit" className={button}>
+              <button type="submit" form="checkout-form" className={`${button} w-full py-3`}>
                 Revisar pedido
               </button>
-            </div>
-          </form>
-        )}
-
-        {step === "review" && (
-          <section aria-labelledby="c-revisao" className="grid gap-4 bg-card p-6">
-            <h2 id="c-revisao" className="text-lg font-bold">
-              Revisão do pedido
-            </h2>
-            <dl className="grid gap-2 text-sm">
-              <div>
-                <dt className="text-text-soft">Colecionador</dt>
-                <dd>
-                  {values.fullName} · {values.email}
-                  {values.phone && ` · ${values.phone}`}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-text-soft">Carteira</dt>
-                <dd>
-                  {selectedWallet?.label} ({selectedWallet && shortAddress(selectedWallet.address)})
-                </dd>
-              </div>
-              <div>
-                <dt className="text-text-soft">Rede</dt>
-                <dd>{networkLabels[values.network]}</dd>
-              </div>
-            </dl>
-
-            {changed && (
-              <p role="alert" className="border border-brand p-3 text-sm">
-                Os valores do pedido mudaram. Confira o resumo ao lado e confirme os novos valores
-                para continuar.
-              </p>
-            )}
-
-            {submitError && (
-              <p role="alert" className="text-sm text-red-400">
-                {submitError}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={onConfirm}
-                disabled={createOrder.isPending || q.issues.length > 0}
-                className={button}
-              >
-                {createOrder.isPending
-                  ? "Enviando pedido..."
-                  : changed
-                    ? "Confirmar novos valores"
-                    : submitError
-                      ? "Tentar novamente"
-                      : "Confirmar pedido"}
-              </button>
-              <button
-                type="button"
-                className={ghost}
-                disabled={createOrder.isPending}
-                onClick={() => {
-                  setStep("form")
-                  setNotice(null)
-                  setSubmitError(null)
-                }}
-              >
-                Editar dados
-              </button>
-              {q.issues.length > 0 && (
-                <Link to="/cart" className={ghost}>
-                  Ajustar carrinho
-                </Link>
-              )}
-            </div>
-          </section>
-        )}
+            </section>
+          )}
+        </aside>
       </div>
-
-      <aside aria-label="Resumo do pedido" className="grid content-start gap-4 bg-card p-6">
-        <h2 className="text-lg font-bold">Resumo</h2>
-        <ul className="grid gap-3">
-          {q.items.map((l) => {
-            const issue = q.issues.find((i) => i.nftId === l.nft.id)
-            return (
-              <li key={l.nft.id} className="flex justify-between gap-3 text-sm">
-                <span>
-                  {l.nft.name} × {l.quantity}
-                  {issue && (
-                    <span role="alert" className="block text-xs text-red-400">
-                      {issue.code === "UNAVAILABLE"
-                        ? "Indisponível"
-                        : `Restam apenas ${issue.available}`}
-                    </span>
-                  )}
-                </span>
-                <span>{formatEth(l.lineTotal)} ETH</span>
-              </li>
-            )
-          })}
-        </ul>
-        <Totals
-          subtotal={q.subtotal}
-          discount={q.discount}
-          networkFee={q.networkFee}
-          total={q.total}
-          couponCode={q.coupon?.code}
-        />
-      </aside>
     </div>
   )
 }
