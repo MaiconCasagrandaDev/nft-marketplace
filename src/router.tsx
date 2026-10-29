@@ -4,6 +4,8 @@ import { HomePage } from "@/routes/home"
 import { NftDetailPage } from "@/routes/nft-detail"
 import { catalogSearchSchema } from "@/lib/search"
 import { CartPage } from "@/routes/cart"
+import { CheckoutPage } from "@/routes/checkout"
+import { OrderPage } from "@/routes/order"
 import { authSearchSchema, redirectIfAuthed, requireAuth } from "@/lib/guards"
 import { LoginPage } from "@/routes/login"
 import { RegisterPage } from "@/routes/register"
@@ -44,7 +46,14 @@ const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/checkout",
   beforeLoad: requireAuth,
-  component: () => <p className="py-8">Checkout em construção</p>,
+  component: CheckoutPage,
+})
+
+const orderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/order/$id",
+  beforeLoad: requireAuth,
+  component: OrderPage,
 })
 
 const loginRoute = createRoute({
@@ -68,6 +77,7 @@ const routeTree = rootRoute.addChildren([
   nftRoute,
   cartRoute,
   checkoutRoute,
+  orderRoute,
   loginRoute,
   registerRoute,
 ])
