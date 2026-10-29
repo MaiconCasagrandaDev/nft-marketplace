@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout"
 import { HomePage } from "@/routes/home"
 import { NftDetailPage } from "@/routes/nft-detail"
 import { catalogSearchSchema } from "@/lib/search"
+import { CartPage } from "@/routes/cart"
 
 function NotFound() {
   return (
@@ -30,7 +31,19 @@ const nftRoute = createRoute({
   component: NftDetailPage,
 })
 
-const routeTree = rootRoute.addChildren([homeRoute, nftRoute])
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/cart",
+  component: CartPage,
+})
+
+const checkoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/checkout",
+  component: () => <p className="py-8">Checkout em construção</p>,
+})
+
+const routeTree = rootRoute.addChildren([homeRoute, nftRoute, cartRoute, checkoutRoute])
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" })
 

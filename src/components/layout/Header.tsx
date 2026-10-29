@@ -1,12 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 import { LogIn, Search, ShoppingCart } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCart } from "@/features/cart/useCart"
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isHome = pathname === "/"
   const isMarket = ["/nft", "/cart", "/checkout"].some((p) => pathname.startsWith(p))
-  const cartCount = 0
+  const { data: cart } = useCart()
+  const cartCount = cart?.itemCount ?? 0
 
   const item = "flex items-center border-b-2 border-transparent text-base"
   const active = "border-brand text-brand-hover"
@@ -33,7 +35,11 @@ export function Header() {
           <button type="button" aria-label="Buscar" className="hover:text-brand-hover">
             <Search className="size-5" />
           </button>
-          <Link to="/" aria-label="Carrinho" className="relative hover:text-brand-hover">
+          <Link
+            to="/cart"
+            aria-label={`Carrinho, ${cartCount} itens`}
+            className="relative hover:text-brand-hover"
+          >
             <ShoppingCart className="size-5" />
             {cartCount > 0 && (
               <span className="absolute -right-2 -top-2 grid size-4 place-items-center rounded-full bg-brand text-[10px] font-bold text-primary-foreground">
