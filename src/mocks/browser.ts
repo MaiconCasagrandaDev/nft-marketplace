@@ -5,12 +5,14 @@ import { expireSessions, resetDb } from "./db"
 import { favoriteHandlers } from "./favoriteHandlers"
 import { handlers } from "./handlers"
 import { scenarios, type ScenarioName } from "./scenarios"
+import { contentHandlers } from "./contentHandlers"
 
 export const worker = setupWorker(
   ...handlers,
   ...cartHandlers,
   ...authHandlers,
   ...favoriteHandlers,
+  ...contentHandlers,
 )
 
 declare global {
