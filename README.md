@@ -1,6 +1,6 @@
 # Kurio — Marketplace de NFTs (Desafio Frontend)
 
-Marketplace de NFTs em React, com **API e servidor de tempo real simulados no navegador via MSW**. Todo fluxo (catálogo, favoritos, carrinho, checkout, pedido) passa por requisições HTTP e por um socket reais interceptados pelo MSW — nenhum evento é disparado direto na interface.
+Marketplace de NFTs em React, com **API e servidor de tempo real simulados no navegador via MSW**. Todo fluxo (catálogo, favoritos, carrinho, checkout, pedido, perfil e carteiras) passa por requisições HTTP e por um socket reais interceptados pelo MSW — nenhum evento é disparado direto na interface.
 
 - **URL pública:** https://nft-marketplace-maicon99.vercel.app/
 - **Repositório:** https://github.com/MaiconCasagrandaDev/nft-marketplace
@@ -36,6 +36,15 @@ O realtime usa a URL fictícia `wss://realtime.kurio.test`, interceptada pelo MS
 
 Também é possível criar uma conta em **Entrar → Criar conta**.
 
+## Telas e fluxos
+
+- **Início e catálogo:** busca, filtros, ordenação e página ficam na URL.
+- **Detalhe do NFT:** preço e estoque ao vivo por socket, favoritar com rollback.
+- **Carrinho → Pagamento → Pedido:** cotação com `quoteId`, confirmação de novos valores, pedido idempotente e confirmação só após a resposta da simulação.
+- **Perfil (`/profile`):** dados do colecionador, avatar e troca de senha (requer login).
+- **Carteiras (`/wallets`):** carteira principal e secundárias, com criar, editar, tornar principal e excluir (requer login).
+- **Responsivo:** desktop e mobile (375 px), com navegação inferior no celular.
+
 ## Banco simulado, cenários e reset
 
 O banco do mock fica no `localStorage` (`kurio:mock-db:v4`) e sobrevive a recarregamentos. No Console do navegador existe o objeto `window.kurioMock`:
@@ -62,6 +71,7 @@ O banco do mock fica no `localStorage` (`kurio:mock-db:v4`) e sobrevive a recarr
 - **Preço muda durante o checkout:** na revisão do pedido, rode `kurioMock.setPrice(...)` → "Confirmar novos valores".
 - **Evento duplicado ou atrasado:** `replayLastEvent()` / `emitStaleEvent(id)` → a UI ignora.
 - **Queda do socket:** `disconnectSockets(4000)` → reconecta e reconcilia com a API.
+- **Erros de perfil e carteira:** em `/profile`, e-mail ou usuário já em uso e senha atual incorreta devolvem `422` com erro por campo; em `/wallets`, endereço inválido ou repetido também devolve `422`, e excluir a única carteira devolve `409 LAST_WALLET`.
 
 ## Testes (Playwright)
 
@@ -70,14 +80,18 @@ npx playwright install chromium   # primeira vez
 npm run test:e2e
 ```
 
-12 testes, sempre com MSW (sem dados fixos na UI): catálogo com estado na URL, rota privada redirecionando ao login, compra completa até o pedido confirmado, mudança de preço na revisão, pagamento recusado, timeout com idempotência, rollback de favorito, preço ao vivo por socket, evento duplicado/atrasado e reconciliação após queda do socket.
+15 testes, sempre com MSW (sem dados fixos na UI): catálogo com estado na URL, rota privada redirecionando ao login, compra completa até o pedido confirmado, mudança de preço na revisão, pagamento recusado, timeout com idempotência, rollback de favorito, preço ao vivo por socket, evento duplicado/atrasado, reconciliação após queda do socket, edição de perfil (com persistência ao navegar), validação de campos e senha atual incorreta, e o ciclo de carteiras (criar secundária, tornar principal e excluir).
+
+## Desempenho e acessibilidade
+
+Lighthouse (mobile, janela anônima, URL pública): **Acessibilidade 100**, **Práticas recomendadas 100**, **Desempenho 70**. O custo de desempenho vem da API simulada rodando no navegador (o pacote do MSW leva cerca de 0,9 s de CPU no perfil de celular lento do Lighthouse). As telas são carregadas por rota sob demanda (veja o ARCHITECTURE.md). O SEO fica em 66 porque o Vercel envia `x-robots-tag: noindex` neste endereço.
 
 ## Estrutura
 
 ```
 src/
-  components/layout   Header, Footer, Layout
-  features/           auth, cart, catalog, checkout, favorites, home, realtime
+  components/layout   Header, Footer, BottomNav, Layout
+  features/           account, auth, cart, catalog, checkout, favorites, home, realtime
   lib/                api (axios), auth-store, guards, config, format, labels
   mocks/              handlers MSW (REST + WebSocket), db, controles
   routes/             páginas
