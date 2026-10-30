@@ -191,10 +191,15 @@ export function NftDetailPage() {
           {/* preço e avaliações: só desktop (no mobile o preço fica na barra) */}
           <div className="hidden flex-wrap items-center justify-between gap-2 border-b border-border pb-2 md:flex">
             <p className="text-2xl font-bold text-brand">
-              {formatEth(nft.price)} ETH
+              {formatEth(total)} ETH
               {nft.previousPrice && (
                 <span className="ml-3 text-base font-normal text-text-soft line-through">
-                  {formatEth(nft.previousPrice)} ETH
+                  {formatEth(new Decimal(nft.previousPrice).times(qty).toString())} ETH
+                </span>
+              )}
+              {qty > 1 && (
+                <span className="ml-3 text-xs font-normal text-text-soft">
+                  ({formatEth(nft.price)} ETH cada)
                 </span>
               )}
             </p>
