@@ -9,6 +9,8 @@ import { OrderPage } from "@/routes/order"
 import { authSearchSchema, redirectIfAuthed, requireAuth } from "@/lib/guards"
 import { LoginPage } from "@/routes/login"
 import { RegisterPage } from "@/routes/register"
+import { ProfilePage } from "@/routes/profile"
+import { WalletsPage } from "@/routes/wallets"
 
 function NotFound() {
   return (
@@ -72,6 +74,20 @@ const registerRoute = createRoute({
   component: RegisterPage,
 })
 
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/profile",
+  beforeLoad: requireAuth,
+  component: ProfilePage,
+})
+
+const walletsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/wallets",
+  beforeLoad: requireAuth,
+  component: WalletsPage,
+})
+
 const routeTree = rootRoute.addChildren([
   homeRoute,
   nftRoute,
@@ -80,6 +96,8 @@ const routeTree = rootRoute.addChildren([
   orderRoute,
   loginRoute,
   registerRoute,
+  profileRoute,
+  walletsRoute,
 ])
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" })

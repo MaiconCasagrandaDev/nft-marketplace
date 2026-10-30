@@ -8,6 +8,7 @@ import { handlers } from "./handlers"
 import { orderHandlers } from "./orderHandlers"
 import { realtimeHandlers } from "./realtime"
 import { walletHandlers } from "./walletHandlers"
+import { accountHandlers } from "./accountHandlers"
 
 export const worker = setupWorker(
   ...handlers,
@@ -16,6 +17,7 @@ export const worker = setupWorker(
   ...favoriteHandlers,
   ...contentHandlers,
   ...walletHandlers,
+  ...accountHandlers,
   ...orderHandlers,
   ...realtimeHandlers,
 )

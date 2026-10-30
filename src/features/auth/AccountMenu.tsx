@@ -1,13 +1,18 @@
-import { Link } from "@tanstack/react-router"
-import { LogIn } from "lucide-react"
-import { useLogout, useSession } from "./useAuth"
+import { Link } from "@tanstack/react-router";
+import { LogIn } from "lucide-react";
+import { useLogout, useSession } from "./useAuth";
 
 export function AccountMenu() {
-  const { user, isLoading } = useSession()
-  const logout = useLogout()
+  const { user, isLoading } = useSession();
+  const logout = useLogout();
 
   if (isLoading) {
-    return <span className="inline-block h-8 w-24 animate-pulse rounded bg-card" aria-hidden />
+    return (
+      <span
+        className="inline-block h-8 w-24 animate-pulse rounded bg-card"
+        aria-hidden
+      />
+    );
   }
 
   if (!user) {
@@ -18,11 +23,23 @@ export function AccountMenu() {
       >
         <LogIn className="size-4" /> Entrar
       </Link>
-    )
+    );
   }
 
   return (
     <div className="flex items-center gap-3">
+      <Link
+        to="/profile"
+        className="hidden text-sm hover:text-brand-hover md:inline"
+      >
+        Perfil
+      </Link>
+      <Link
+        to="/wallets"
+        className="hidden text-sm hover:text-brand-hover md:inline"
+      >
+        Carteiras
+      </Link>
       <span className="text-sm text-text-soft" data-testid="user-name">
         @{user.username}
       </span>
@@ -35,5 +52,5 @@ export function AccountMenu() {
         Sair
       </button>
     </div>
-  )
+  );
 }

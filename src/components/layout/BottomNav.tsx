@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router"
 import { Heart, Home, ScanLine, ShoppingCart, User } from "lucide-react"
 import { useCart } from "@/features/cart/useCart"
 import { cn } from "@/lib/utils"
+import { useToken } from "@/features/auth/useAuth"
 
 const side = "relative grid size-12 place-items-center rounded-full"
 
@@ -9,6 +10,7 @@ export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { data: cart } = useCart()
   const count = cart?.itemCount ?? 0
+  const token = useToken()
   if (["/nft", "/cart", "/checkout", "/login", "/register"].some((p) => pathname.startsWith(p))) return null
   return (
     <nav
@@ -57,7 +59,17 @@ export function BottomNav() {
             </span>
           )}
         </Link>
-        <Link to="/login" aria-label="Perfil" className={cn(side, "text-text-soft")}>
+        <Link
+          to={token ? "/profile" : "/login"}
+          aria-label="Perfil"
+          aria-current={pathname.startsWith("/profile") || pathname.startsWith("/wallets") ? "page" : undefined}
+          className={cn(
+            side,
+            pathname.startsWith("/profile") || pathname.startsWith("/wallets")
+              ? "text-brand"
+              : "text-text-soft",
+          )}
+        >
           <User className="size-5" />
         </Link>
       </div>
