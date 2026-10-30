@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Link, useRouter, useSearch } from "@tanstack/react-router"
+import { X } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -57,21 +58,43 @@ export function RegisterPage() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-md py-12 max-md:px-3 max-md:py-0">
+    <section className="mx-auto w-full max-w-md max-md:px-3 md:my-10 md:max-w-[500px]">
       <p
         aria-hidden="true"
         className="mb-12 mt-14 text-center text-3xl font-bold tracking-[0.2em] md:hidden"
       >
         KURIO
       </p>
-      <div className="rounded-xl border border-border bg-card p-8 max-md:border-0 max-md:bg-transparent max-md:p-0">
-        <h1 className="mb-1 text-2xl font-bold max-md:mb-6 max-md:text-center max-md:text-lg">
-          <span className="md:hidden">Criar perfil de colecionador</span>
-          <span className="hidden md:inline">Criar conta</span>
-        </h1>
-        <p className="mb-6 text-sm text-text-soft max-md:hidden">Comece a colecionar na Kurio.</p>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+      <div className="relative md:overflow-hidden md:bg-card md:px-20 md:pb-[72px] md:pt-[45px]">
+        <Link
+          to="/"
+          aria-label="Fechar"
+          className="absolute right-3.5 top-3 grid size-8 place-items-center text-brand hover:text-brand-hover max-md:hidden"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </Link>
+
+        <div className="flex items-center justify-center gap-2.5 text-xl font-bold max-md:hidden">
+          <Link
+            to="/login"
+            search={{ redirect: search.redirect }}
+            className="hover:text-brand-hover"
+          >
+            Entrar
+          </Link>
+          <span aria-hidden="true" className="h-5 w-px bg-brand" />
+          <h1 className="text-brand">Criar conta</h1>
+        </div>
+        <h1 className="mb-6 text-center text-lg font-bold md:hidden">
+          Criar perfil de colecionador
+        </h1>
+
+        <p className="mt-9 text-center text-[13px] leading-4 text-foreground max-md:hidden md:-mx-[30px]">
+          Crie seu perfil de colecionador e conecte uma carteira quando quiser.
+        </p>
+
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4 md:mt-6 md:gap-3">
           <AuthField
             id="username"
             label="Nome de usuário"
@@ -116,7 +139,7 @@ export function RegisterPage() {
 
           <Button
             type="submit"
-            className="w-full max-md:mt-4 max-md:h-14 max-md:rounded-xl max-md:text-base max-md:font-bold"
+            className="w-full max-md:mt-4 max-md:h-14 max-md:rounded-xl max-md:text-base max-md:font-bold md:mt-3 md:h-[45px] md:rounded-sm md:text-base md:font-bold"
             disabled={registerUser.isPending}
           >
             {registerUser.isPending ? (
@@ -132,16 +155,18 @@ export function RegisterPage() {
 
         <SocialButtons />
 
-        <p className="mt-6 text-sm text-text-soft max-md:text-center">
+        <p className="mt-6 text-sm text-text-soft max-md:text-center md:hidden">
           Já tem conta?{" "}
           <Link
             to="/login"
             search={{ redirect: search.redirect }}
-            className="text-brand hover:text-brand-hover max-md:text-text-soft"
+            className="max-md:text-text-soft"
           >
             Entrar
           </Link>
         </p>
+
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[10px] bg-brand max-md:hidden" />
       </div>
     </section>
   )

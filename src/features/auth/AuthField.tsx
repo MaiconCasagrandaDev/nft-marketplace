@@ -19,7 +19,7 @@ export const AuthField = forwardRef<HTMLInputElement, Props>(function AuthField(
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="sr-only text-sm font-medium md:not-sr-only">
+      <label htmlFor={id} className="sr-only">
         {label}
       </label>
       <div className="relative">
@@ -30,8 +30,8 @@ export const AuthField = forwardRef<HTMLInputElement, Props>(function AuthField(
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
           className={cn(
-            "max-md:h-11 max-md:rounded-xl max-md:border-[#4a2c1f] max-md:bg-transparent max-md:px-4 max-md:text-xs",
-            isPassword && "max-md:pr-12",
+            "h-11 rounded-xl border-[#4a2c1f] bg-transparent px-4 text-xs placeholder:text-[#a8825a] focus-visible:border-brand focus-visible:ring-0 md:h-10 md:rounded md:text-[13px]",
+            isPassword && "pr-12",
             className,
           )}
           {...props}
@@ -42,7 +42,7 @@ export const AuthField = forwardRef<HTMLInputElement, Props>(function AuthField(
             aria-label={show ? "Ocultar" : "Mostrar"}
             aria-pressed={show}
             onClick={() => setShow((v) => !v)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6b4430] md:hidden"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8a6a45] hover:text-brand-hover"
           >
             {show ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
           </button>
