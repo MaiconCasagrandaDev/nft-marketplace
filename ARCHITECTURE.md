@@ -75,3 +75,4 @@ O `socket.io-client` é importado dinamicamente depois que o MSW inicia; caso co
 - Detalhe: avaliações (19), chips de edição, miniaturas, atributos e textos de contrato/direitos são **conteúdo estático**, como no Figma; o ícone de X foi substituído pelo do Twitter em SVG; os títulos "Contrato" e "Direitos autorais" foram corrigidos para casar com o texto.
 - Pagamento: os campos do Figma sem equivalente no contrato (nome de usuário, nome do perfil, ENS/carteira secundária, código de indicação, nome ENS, "usar outra carteira" e observação) são exibidos mas não enviados nem validados; telefone não é coletado.
 - Newsletter: `POST /api/newsletter` simulado.
+- Mobile: o Figma não traz frames mobile; a versão de 375 px é uma adaptação própria (cabeçalho, filtros, carrinho, pagamento e confirmação em coluna única).
