@@ -16,6 +16,7 @@ import { getApiError } from "@/lib/api"
 import { networkLabels } from "@/lib/labels"
 import type { Wallet } from "@/types/checkout"
 import type { Network } from "@/types/nft"
+import { AccountShell } from "@/features/account/AccountShell"
 
 const networks = Object.keys(networkLabels) as [Network, ...Network[]]
 const EVM = /^0x[0-9a-fA-F]{40}$/
@@ -153,7 +154,8 @@ export function WalletsPage() {
   const fail = (error: unknown) => setMessage(getApiError(error).message)
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-6 pb-12">
+    <AccountShell active="wallets">
+    <div className="grid gap-6">
       <div className="relative flex items-center justify-center py-4 md:justify-start md:pt-8">
         <button
           type="button"
@@ -291,5 +293,6 @@ export function WalletsPage() {
         </Link>
       </p>
     </div>
+    </AccountShell>
   )
 }

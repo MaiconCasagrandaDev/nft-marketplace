@@ -140,12 +140,15 @@ export const accountHandlers = [
 
     const network = body.network ?? wallet.network
     const address = (body.address ?? wallet.address).trim()
+    const changed = network !== wallet.network || address !== wallet.address
     const fields: Record<string, string> = {}
     if (body.label !== undefined && body.label.trim().length < 2) fields.label = "Informe um nome"
     if (!NETWORKS.includes(network)) fields.network = "Selecione a rede"
-    if (!validAddress(network, address)) fields.address = "Endereço inválido"
-    else if (list.some((w) => w.id !== wallet.id && w.address.toLowerCase() === address.toLowerCase())) {
-      fields.address = "Esta carteira já foi cadastrada"
+    if (changed) {
+      if (!validAddress(network, address)) fields.address = "Endereço inválido"
+      else if (list.some((w) => w.id !== wallet.id && w.address.toLowerCase() === address.toLowerCase())) {
+        fields.address = "Esta carteira já foi cadastrada"
+      }
     }
     if (Object.keys(fields).length > 0) {
       return apiError("VALIDATION", "Dados inválidos", 422, { fields })
