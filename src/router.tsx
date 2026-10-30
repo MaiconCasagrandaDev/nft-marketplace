@@ -1,16 +1,14 @@
-import { createRootRoute, createRoute, createRouter, Link } from "@tanstack/react-router"
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Link,
+  lazyRouteComponent,
+} from "@tanstack/react-router"
 import { Layout } from "@/components/layout/Layout"
 import { HomePage } from "@/routes/home"
-import { NftDetailPage } from "@/routes/nft-detail"
 import { catalogSearchSchema } from "@/lib/search"
-import { CartPage } from "@/routes/cart"
-import { CheckoutPage } from "@/routes/checkout"
-import { OrderPage } from "@/routes/order"
 import { authSearchSchema, redirectIfAuthed, requireAuth } from "@/lib/guards"
-import { LoginPage } from "@/routes/login"
-import { RegisterPage } from "@/routes/register"
-import { ProfilePage } from "@/routes/profile"
-import { WalletsPage } from "@/routes/wallets"
 
 function NotFound() {
   return (
@@ -21,6 +19,10 @@ function NotFound() {
       </Link>
     </div>
   )
+}
+
+function Pending() {
+  return <div className="shimmer my-8 h-64 bg-card" aria-busy="true" />
 }
 
 const rootRoute = createRootRoute({ component: Layout, notFoundComponent: NotFound })
@@ -35,27 +37,27 @@ const homeRoute = createRoute({
 const nftRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/nft/$id",
-  component: NftDetailPage,
+  component: lazyRouteComponent(() => import("@/routes/nft-detail"), "NftDetailPage"),
 })
 
 const cartRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/cart",
-  component: CartPage,
+  component: lazyRouteComponent(() => import("@/routes/cart"), "CartPage"),
 })
 
 const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/checkout",
   beforeLoad: requireAuth,
-  component: CheckoutPage,
+  component: lazyRouteComponent(() => import("@/routes/checkout"), "CheckoutPage"),
 })
 
 const orderRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/order/$id",
   beforeLoad: requireAuth,
-  component: OrderPage,
+  component: lazyRouteComponent(() => import("@/routes/order"), "OrderPage"),
 })
 
 const loginRoute = createRoute({
@@ -63,7 +65,7 @@ const loginRoute = createRoute({
   path: "/login",
   validateSearch: authSearchSchema,
   beforeLoad: redirectIfAuthed,
-  component: LoginPage,
+  component: lazyRouteComponent(() => import("@/routes/login"), "LoginPage"),
 })
 
 const registerRoute = createRoute({
@@ -71,21 +73,21 @@ const registerRoute = createRoute({
   path: "/register",
   validateSearch: authSearchSchema,
   beforeLoad: redirectIfAuthed,
-  component: RegisterPage,
+  component: lazyRouteComponent(() => import("@/routes/register"), "RegisterPage"),
 })
 
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/profile",
   beforeLoad: requireAuth,
-  component: ProfilePage,
+  component: lazyRouteComponent(() => import("@/routes/profile"), "ProfilePage"),
 })
 
 const walletsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/wallets",
   beforeLoad: requireAuth,
-  component: WalletsPage,
+  component: lazyRouteComponent(() => import("@/routes/wallets"), "WalletsPage"),
 })
 
 const routeTree = rootRoute.addChildren([
@@ -100,7 +102,12 @@ const routeTree = rootRoute.addChildren([
   walletsRoute,
 ])
 
-export const router = createRouter({ routeTree, defaultPreload: "intent" })
+export const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  defaultPendingMs: 200,
+  defaultPendingComponent: Pending,
+})
 
 declare module "@tanstack/react-router" {
   interface Register {
