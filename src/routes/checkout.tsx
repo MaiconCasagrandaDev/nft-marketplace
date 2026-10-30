@@ -1,10 +1,10 @@
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useQueryClient } from "@tanstack/react-query"
-import { Link, useRouter } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { useSession } from "@/features/auth/useAuth"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useRouter } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useSession } from "@/features/auth/useAuth";
 import {
   errorQuote,
   quoteKey,
@@ -12,14 +12,15 @@ import {
   useCreateOrder,
   useQuote,
   useWallets,
-} from "@/features/checkout/hooks"
-import { Totals } from "@/features/checkout/Totals"
-import { getApiError } from "@/lib/api"
-import { formatEth } from "@/lib/format"
-import { networkLabels } from "@/lib/labels"
-import type { Network } from "@/types/nft"
+} from "@/features/checkout/hooks";
+import { Totals } from "@/features/checkout/Totals";
+import { getApiError } from "@/lib/api";
+import { formatEth } from "@/lib/format";
+import { networkLabels } from "@/lib/labels";
+import type { CreateOrderInput } from "@/types/checkout";
+import type { Network } from "@/types/nft";
 
-const networks = Object.keys(networkLabels) as [Network, ...Network[]]
+const networks = Object.keys(networkLabels) as [Network, ...Network[]];
 
 const schema = z.object({
   fullName: z.string().trim().min(3, "Informe o nome completo"),
@@ -27,48 +28,55 @@ const schema = z.object({
   phone: z.string(),
   walletId: z.string().min(1, "Selecione uma carteira"),
   network: z.enum(networks),
-})
-type Values = z.infer<typeof schema>
+});
+type Values = z.infer<typeof schema>;
 
-const shortAddress = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`
+const shortAddress = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const button =
-  "rounded bg-brand px-5 py-2 text-sm font-bold text-primary-foreground hover:bg-brand-hover disabled:opacity-60"
-const ghost = "rounded border border-brand px-5 py-2 text-sm font-bold text-brand hover:text-brand-hover"
-const input = "h-10 w-full border border-border bg-background px-3 text-sm"
-const cell = "grid content-start gap-1.5"
-const label = "text-sm"
+  "rounded bg-brand px-5 py-2 text-sm font-bold text-primary-foreground hover:bg-brand-hover disabled:opacity-60";
+const ghost =
+  "rounded border border-brand px-5 py-2 text-sm font-bold text-brand hover:text-brand-hover";
+const input = "h-10 w-full border border-border bg-background px-3 text-sm";
+const cell = "grid content-start gap-1.5";
+const label = "text-sm";
 
 function Star() {
-  return <span className="text-brand"> *</span>
+  return <span className="text-brand"> *</span>;
 }
 
 function Breadcrumb() {
   return (
     <nav aria-label="Navegação" className="pt-8 text-sm font-bold">
-      <Link to="/" className="hover:text-brand-hover">Início</Link>
+      <Link to="/" className="hover:text-brand-hover">
+        Início
+      </Link>
       {" / "}
-      <Link to="/" hash="catalogo" className="hover:text-brand-hover">Mercado</Link>
+      <Link to="/" hash="catalogo" className="hover:text-brand-hover">
+        Mercado
+      </Link>
       {" / "}
       <span>Pagamento</span>
     </nav>
-  )
+  );
 }
 
 export function CheckoutPage() {
-  const router = useRouter()
-  const qc = useQueryClient()
-  const { user } = useSession()
-  const quote = useQuote()
-  const wallets = useWallets()
-  const connect = useConnectWallet()
-  const createOrder = useCreateOrder()
+  const router = useRouter();
+  const qc = useQueryClient();
+  const { user } = useSession();
+  const quote = useQuote();
+  const wallets = useWallets();
+  const connect = useConnectWallet();
+  const createOrder = useCreateOrder();
+  const lastInput = useRef<CreateOrderInput | null>(null);
 
-  const [step, setStep] = useState<"form" | "review">("form")
-  const [connectedKey, setConnectedKey] = useState<string | null>(null)
-  const [connectError, setConnectError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [reviewedQuoteId, setReviewedQuoteId] = useState<string | null>(null)
+  const [step, setStep] = useState<"form" | "review">("form");
+  const [connectedKey, setConnectedKey] = useState<string | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [reviewedQuoteId, setReviewedQuoteId] = useState<string | null>(null);
+  const [uncertain, setUncertain] = useState(false);
 
   const {
     register,
@@ -80,38 +88,47 @@ export function CheckoutPage() {
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { fullName: "", email: "", phone: "", walletId: "", network: "ethereum" },
-  })
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      walletId: "",
+      network: "ethereum",
+    },
+  });
 
-  const values = watch()
-  const currentKey = `${values.walletId}:${values.network}`
-  const connected = connectedKey === currentKey
+  const values = watch();
+  const currentKey = `${values.walletId}:${values.network}`;
+  const connected = connectedKey === currentKey;
 
   useEffect(() => {
-    if (!user) return
-    if (!getValues("fullName")) setValue("fullName", user.displayName)
-    if (!getValues("email")) setValue("email", user.email)
-  }, [user, getValues, setValue])
+    if (!user) return;
+    if (!getValues("fullName")) setValue("fullName", user.displayName);
+    if (!getValues("email")) setValue("email", user.email);
+  }, [user, getValues, setValue]);
 
   useEffect(() => {
-    if (!wallets.data || getValues("walletId")) return
-    const main = wallets.data.find((w) => w.primary) ?? wallets.data[0]
+    if (!wallets.data || getValues("walletId")) return;
+    const main = wallets.data.find((w) => w.primary) ?? wallets.data[0];
     if (main) {
-      setValue("walletId", main.id)
-      setValue("network", main.network)
+      setValue("walletId", main.id);
+      setValue("network", main.network);
     }
-  }, [wallets.data, getValues, setValue])
+  }, [wallets.data, getValues, setValue]);
 
   if (quote.isPending || wallets.isPending) {
     return (
       <div>
         <Breadcrumb />
-        <div className="grid gap-8 py-6 lg:grid-cols-[1fr_405px]" aria-busy="true">
+        <div
+          className="grid gap-8 py-6 lg:grid-cols-[1fr_405px]"
+          aria-busy="true"
+        >
           <div className="shimmer h-96 bg-card" />
           <div className="shimmer h-64 bg-card" />
         </div>
       </div>
-    )
+    );
   }
 
   if (quote.isError || wallets.isError) {
@@ -122,18 +139,18 @@ export function CheckoutPage() {
           type="button"
           className={button}
           onClick={() => {
-            quote.refetch()
-            wallets.refetch()
+            quote.refetch();
+            wallets.refetch();
           }}
         >
           Tentar novamente
         </button>
       </div>
-    )
+    );
   }
 
-  const q = quote.data
-  if (q.items.length === 0) {
+  const q = quote.data;
+  if (q.items.length === 0 && step === "form") {
     return (
       <div className="py-16 text-center">
         <h1 className="mb-2 text-2xl font-bold">Seu carrinho está vazio</h1>
@@ -141,104 +158,129 @@ export function CheckoutPage() {
           Voltar ao catálogo
         </Link>
       </div>
-    )
+    );
   }
 
-  const selectedWallet = wallets.data.find((w) => w.id === values.walletId)
+  const selectedWallet = wallets.data.find((w) => w.id === values.walletId);
   // a cotação mudou depois que o usuário revisou: exige nova confirmação
-  const changed = step === "review" && reviewedQuoteId !== null && reviewedQuoteId !== q.quoteId
+  const changed =
+    step === "review" &&
+    !uncertain &&
+    reviewedQuoteId !== null &&
+    reviewedQuoteId !== q.quoteId;
 
   function pickWallet(id: string) {
-    const picked = wallets.data?.find((x) => x.id === id)
-    setValue("walletId", id, { shouldValidate: true })
-    if (picked) setValue("network", picked.network)
-    setConnectError(null)
+    const picked = wallets.data?.find((x) => x.id === id);
+    setValue("walletId", id, { shouldValidate: true });
+    if (picked) setValue("network", picked.network);
+    setConnectError(null);
   }
 
   function onConnect() {
-    setConnectError(null)
+    setConnectError(null);
     connect.mutate(
       { walletId: values.walletId, network: values.network },
       {
         onSuccess: () => setConnectedKey(currentKey),
         onError: (error) => {
-          setConnectedKey(null)
-          setConnectError(getApiError(error).message)
+          setConnectedKey(null);
+          setConnectError(getApiError(error).message);
         },
       },
-    )
+    );
   }
 
   async function onReview() {
-    setNotice(null)
-    setSubmitError(null)
+    setNotice(null);
+    setSubmitError(null);
     if (!connected) {
-      setConnectError("Conecte a carteira antes de revisar o pedido.")
-      return
+      setConnectError("Conecte a carteira antes de revisar o pedido.");
+      return;
     }
     // revalida preço, disponibilidade, cupom e taxas antes da revisão
-    const fresh = (await quote.refetch()).data
+    const fresh = (await quote.refetch()).data;
     if (!fresh || fresh.items.length === 0) {
-      setNotice("Seu carrinho está vazio.")
-      return
+      setNotice("Seu carrinho está vazio.");
+      return;
     }
     if (fresh.issues.length > 0) {
-      setNotice("A disponibilidade de algum item mudou. Ajuste o carrinho antes de continuar.")
+      setNotice(
+        "A disponibilidade de algum item mudou. Ajuste o carrinho antes de continuar.",
+      );
     }
-    setStep("review")
-    setReviewedQuoteId(fresh.quoteId)
+    setStep("review");
+    setReviewedQuoteId(fresh.quoteId);
   }
 
   function onConfirm() {
     if (changed) {
       // o usuário reconhece os novos valores antes de poder enviar
-      setReviewedQuoteId(q.quoteId)
-      setNotice(null)
-      return
+      setReviewedQuoteId(q.quoteId);
+      setNotice(null);
+      return;
     }
-    setNotice(null)
-    setSubmitError(null)
-    const v = getValues()
-    createOrder.mutate(
-      {
-        quoteId: q.quoteId,
-        walletId: v.walletId,
-        network: v.network,
-        collector: { fullName: v.fullName.trim(), email: v.email.trim(), phone: v.phone },
-      },
-      {
-        onSuccess: (order) => router.navigate({ to: "/order/$id", params: { id: order.id } }),
-        onError: (error) => {
-          const apiError = getApiError(error)
-          const fresh = errorQuote(error)
-          if (fresh) qc.setQueryData(quoteKey, fresh)
+    // nova tentativa após falha de rede: reenvia exatamente o mesmo pedido
+    const retrying = uncertain && lastInput.current !== null;
+    setNotice(null);
+    setSubmitError(null);
+    setUncertain(false);
+    const v = getValues();
+    const input: CreateOrderInput =
+      retrying && lastInput.current
+        ? lastInput.current
+        : {
+            quoteId: q.quoteId,
+            walletId: v.walletId,
+            network: v.network,
+            collector: {
+              fullName: v.fullName.trim(),
+              email: v.email.trim(),
+              phone: v.phone,
+            },
+          };
+    lastInput.current = input;
 
-          switch (apiError.code) {
-            case "QUOTE_CHANGED":
-              setNotice("Os valores do pedido mudaram. Revise o novo total e confirme novamente.")
-              break
-            case "AVAILABILITY_CHANGED":
-              setNotice("A disponibilidade de algum item mudou. Ajuste o carrinho antes de continuar.")
-              break
-            case "VALIDATION":
-              if (apiError.fields) {
-                for (const [name, message] of Object.entries(apiError.fields)) {
-                  setError(name as keyof Values, { message })
-                }
-              }
-              setStep("form")
-              break
-            case "NETWORK":
-              setSubmitError(
-                "Não recebemos resposta do servidor. Tente de novo: o pedido não será duplicado.",
-              )
-              break
-            default:
-              setSubmitError(apiError.message)
-          }
-        },
+    createOrder.mutate(input, {
+      onSuccess: (order) => {
+        lastInput.current = null;
+        router.navigate({ to: "/order/$id", params: { id: order.id } });
       },
-    )
+      onError: (error) => {
+        const apiError = getApiError(error);
+        if (apiError.code !== "NETWORK") lastInput.current = null;
+        const fresh = errorQuote(error);
+        if (fresh) qc.setQueryData(quoteKey, fresh);
+
+        switch (apiError.code) {
+          case "QUOTE_CHANGED":
+            setNotice(
+              "Os valores do pedido mudaram. Revise o novo total e confirme novamente.",
+            );
+            break;
+          case "AVAILABILITY_CHANGED":
+            setNotice(
+              "A disponibilidade de algum item mudou. Ajuste o carrinho antes de continuar.",
+            );
+            break;
+          case "VALIDATION":
+            if (apiError.fields) {
+              for (const [name, message] of Object.entries(apiError.fields)) {
+                setError(name as keyof Values, { message });
+              }
+            }
+            setStep("form");
+            break;
+          case "NETWORK":
+            setUncertain(true);
+            setSubmitError(
+              "Não recebemos resposta do servidor. Tente de novo: o pedido não será duplicado.",
+            );
+            break;
+          default:
+            setSubmitError(apiError.message);
+        }
+      },
+    });
   }
 
   return (
@@ -266,7 +308,8 @@ export function CheckoutPage() {
               >
                 <div className={cell}>
                   <label htmlFor="fullName" className={label}>
-                    Nome de exibição<Star />
+                    Nome de exibição
+                    <Star />
                   </label>
                   <input
                     id="fullName"
@@ -276,23 +319,35 @@ export function CheckoutPage() {
                     {...register("fullName")}
                   />
                   {errors.fullName && (
-                    <p role="alert" className="text-sm text-red-400">{errors.fullName.message}</p>
+                    <p role="alert" className="text-sm text-red-400">
+                      {errors.fullName.message}
+                    </p>
                   )}
                 </div>
 
                 <div className={cell}>
-                  <label htmlFor="username" className={label}>Nome de usuário</label>
-                  <input id="username" name="username" autoComplete="username" className={input} />
+                  <label htmlFor="username" className={label}>
+                    Nome de usuário
+                  </label>
+                  <input
+                    id="username"
+                    name="username"
+                    autoComplete="username"
+                    className={input}
+                  />
                 </div>
 
                 <div className={cell}>
                   <label htmlFor="network" className={label}>
-                    Rede<Star />
+                    Rede
+                    <Star />
                   </label>
                   <select
                     id="network"
                     className={input}
-                    {...register("network", { onChange: () => setConnectError(null) })}
+                    {...register("network", {
+                      onChange: () => setConnectError(null),
+                    })}
                   >
                     {networks.map((n) => (
                       <option key={n} value={n}>
@@ -303,13 +358,16 @@ export function CheckoutPage() {
                 </div>
 
                 <div className={cell}>
-                  <label htmlFor="profile" className={label}>Nome do perfil</label>
+                  <label htmlFor="profile" className={label}>
+                    Nome do perfil
+                  </label>
                   <input id="profile" name="profile" className={input} />
                 </div>
 
                 <div className={cell}>
                   <label htmlFor="address" className={label}>
-                    Endereço da carteira<Star />
+                    Endereço da carteira
+                    <Star />
                   </label>
                   <input
                     id="address"
@@ -335,7 +393,8 @@ export function CheckoutPage() {
 
                 <div className={cell}>
                   <label htmlFor="walletType" className={label}>
-                    Tipo de carteira<Star />
+                    Tipo de carteira
+                    <Star />
                   </label>
                   <select
                     id="walletType"
@@ -352,13 +411,16 @@ export function CheckoutPage() {
                 </div>
 
                 <div className={cell}>
-                  <label htmlFor="referral" className={label}>Código de indicação</label>
+                  <label htmlFor="referral" className={label}>
+                    Código de indicação
+                  </label>
                   <input id="referral" name="referral" className={input} />
                 </div>
 
                 <div className={cell}>
                   <label htmlFor="email" className={label}>
-                    E-mail<Star />
+                    E-mail
+                    <Star />
                   </label>
                   <input
                     id="email"
@@ -369,19 +431,31 @@ export function CheckoutPage() {
                     {...register("email")}
                   />
                   {errors.email && (
-                    <p role="alert" className="text-sm text-red-400">{errors.email.message}</p>
+                    <p role="alert" className="text-sm text-red-400">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
 
                 <div className={cell}>
-                  <label htmlFor="ens" className={label}>Nome ENS</label>
-                  <select id="ens" name="ens" className="h-10 w-[78px] border border-border bg-background px-2 text-sm">
+                  <label htmlFor="ens" className={label}>
+                    Nome ENS
+                  </label>
+                  <select
+                    id="ens"
+                    name="ens"
+                    className="h-10 w-[78px] border border-border bg-background px-2 text-sm"
+                  >
                     <option>.eth</option>
                   </select>
                 </div>
 
                 <label className="flex items-center gap-2 text-sm sm:col-span-2">
-                  <input type="checkbox" name="otherWallet" className="size-4 accent-[#D28A4C]" />
+                  <input
+                    type="checkbox"
+                    name="otherWallet"
+                    className="size-4 accent-[#D28A4C]"
+                  />
                   Usar outra carteira?
                 </label>
 
@@ -400,7 +474,10 @@ export function CheckoutPage() {
           )}
 
           {step === "review" && (
-            <section aria-labelledby="c-revisao" className="grid gap-4 bg-card p-6">
+            <section
+              aria-labelledby="c-revisao"
+              className="grid gap-4 bg-card p-6"
+            >
               <h2 id="c-revisao" className="text-lg font-bold">
                 Revisão do pedido
               </h2>
@@ -414,7 +491,8 @@ export function CheckoutPage() {
                 <div>
                   <dt className="text-text-soft">Carteira</dt>
                   <dd>
-                    {selectedWallet?.label} ({selectedWallet && shortAddress(selectedWallet.address)})
+                    {selectedWallet?.label} (
+                    {selectedWallet && shortAddress(selectedWallet.address)})
                   </dd>
                 </div>
                 <div>
@@ -425,8 +503,8 @@ export function CheckoutPage() {
 
               {changed && (
                 <p role="alert" className="border border-brand p-3 text-sm">
-                  Os valores do pedido mudaram. Confira o resumo ao lado e confirme os novos valores
-                  para continuar.
+                  Os valores do pedido mudaram. Confira o resumo ao lado e
+                  confirme os novos valores para continuar.
                 </p>
               )}
 
@@ -456,9 +534,9 @@ export function CheckoutPage() {
                   className={ghost}
                   disabled={createOrder.isPending}
                   onClick={() => {
-                    setStep("form")
-                    setNotice(null)
-                    setSubmitError(null)
+                    setStep("form");
+                    setNotice(null);
+                    setSubmitError(null);
                   }}
                 >
                   Editar dados
@@ -473,7 +551,10 @@ export function CheckoutPage() {
           )}
         </div>
 
-        <aside aria-label="Resumo do pedido" className="grid content-start gap-4">
+        <aside
+          aria-label="Resumo do pedido"
+          className="grid content-start gap-4"
+        >
           <h2 className="text-base font-bold">Seus NFTs</h2>
 
           <div className="flex justify-between border-b border-border pb-2 text-sm font-bold">
@@ -483,25 +564,38 @@ export function CheckoutPage() {
 
           <ul className="grid gap-3">
             {q.items.map((l) => {
-              const issue = q.issues.find((i) => i.nftId === l.nft.id)
+              const issue = q.issues.find((i) => i.nftId === l.nft.id);
               return (
-                <li key={l.nft.id} className="grid grid-cols-[64px_1fr_auto] items-center gap-3 bg-card p-1.5">
-                  <img src={l.nft.image} alt={l.nft.name} className="size-16 rounded object-cover" />
+                <li
+                  key={l.nft.id}
+                  className="grid grid-cols-[64px_1fr_auto] items-center gap-3 bg-card p-1.5"
+                >
+                  <img
+                    src={l.nft.image}
+                    alt={l.nft.name}
+                    className="size-16 rounded object-cover"
+                  />
                   <div className="min-w-0 text-sm">
                     <p className="font-bold">{l.nft.name}</p>
-                    <p className="text-xs text-text-soft">ID do token: {l.nft.tokenId}</p>
+                    <p className="text-xs text-text-soft">
+                      ID do token: {l.nft.tokenId}
+                    </p>
                     {issue && (
                       <p role="alert" className="text-xs text-red-400">
-                        {issue.code === "UNAVAILABLE" ? "Indisponível" : `Restam apenas ${issue.available}`}
+                        {issue.code === "UNAVAILABLE"
+                          ? "Indisponível"
+                          : `Restam apenas ${issue.available}`}
                       </p>
                     )}
                   </div>
                   <p className="text-right text-sm">
                     <span className="text-text-soft">(x {l.quantity})</span>{" "}
-                    <span className="font-bold text-brand">{formatEth(l.lineTotal)} ETH</span>
+                    <span className="font-bold text-brand">
+                      {formatEth(l.lineTotal)} ETH
+                    </span>
                   </p>
                 </li>
-              )
+              );
             })}
           </ul>
 
@@ -538,13 +632,16 @@ export function CheckoutPage() {
                       value={w.id}
                       className="accent-[#D28A4C]"
                       {...register("walletId", {
-                        onChange: (e: { target: { value: string } }) => pickWallet(e.target.value),
+                        onChange: (e: { target: { value: string } }) =>
+                          pickWallet(e.target.value),
                       })}
                     />
                     <span>
                       <span className="block text-sm font-bold">
                         {w.label}
-                        {w.primary && !/principal/i.test(w.label) && " (principal)"}
+                        {w.primary &&
+                          !/principal/i.test(w.label) &&
+                          " (principal)"}
                       </span>
                       <span className="block text-xs text-text-soft">
                         {shortAddress(w.address)} · {networkLabels[w.network]}
@@ -565,7 +662,11 @@ export function CheckoutPage() {
                 disabled={!values.walletId || connect.isPending || connected}
                 className={`${ghost} w-full`}
               >
-                {connect.isPending ? "Conectando..." : connected ? "Carteira conectada" : "Conectar carteira"}
+                {connect.isPending
+                  ? "Conectando..."
+                  : connected
+                    ? "Carteira conectada"
+                    : "Conectar carteira"}
               </button>
               {connected && selectedWallet && (
                 <p role="status" className="text-center text-sm text-brand">
@@ -578,7 +679,11 @@ export function CheckoutPage() {
                 </p>
               )}
 
-              <button type="submit" form="checkout-form" className={`${button} w-full py-3`}>
+              <button
+                type="submit"
+                form="checkout-form"
+                className={`${button} w-full py-3`}
+              >
                 Revisar pedido
               </button>
             </section>
@@ -586,5 +691,5 @@ export function CheckoutPage() {
         </aside>
       </div>
     </div>
-  )
+  );
 }

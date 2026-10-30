@@ -11,6 +11,7 @@ export async function gotoWithSocket(page: Page, url: string) {
 
 // chama um controle do servidor simulado (window.kurioMock)
 export async function mock(page: Page, method: string, ...args: unknown[]) {
+  await page.waitForFunction(() => "kurioMock" in window)
   await page.evaluate(
     ([m, a]) => {
       const k = (window as unknown as { kurioMock: Record<string, (...x: unknown[]) => unknown> })
@@ -27,4 +28,19 @@ export async function login(page: Page, email = "ana@kurio.test", password = "Se
   await page.getByLabel(/senha/i).fill(password)
   await page.getByRole("button", { name: /^entrar$/i }).click()
   await expect(page.getByText("@ana")).toBeVisible()
+}
+
+// do detalhe do NFT até a tela de pagamento (só cliques, sem recarregar a página)
+export async function toCheckout(page: Page) {
+  await page.getByRole("button", { name: "COMPRAR" }).click()
+  await expect(page).toHaveURL(/\/cart/)
+  await page.getByRole("link", { name: /conectar e finalizar/i }).click()
+  await expect(page).toHaveURL(/\/checkout/)
+}
+
+export async function connectAndReview(page: Page) {
+  await page.getByRole("button", { name: "Conectar carteira" }).click()
+  await expect(page.getByRole("button", { name: "Carteira conectada" })).toBeVisible()
+  await page.getByRole("button", { name: "Revisar pedido" }).click()
+  await expect(page.getByRole("button", { name: "Confirmar compra" })).toBeVisible()
 }
