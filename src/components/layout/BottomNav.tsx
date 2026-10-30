@@ -9,7 +9,7 @@ export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { data: cart } = useCart()
   const count = cart?.itemCount ?? 0
-  if (pathname.startsWith("/nft")) return null
+  if (pathname.startsWith("/nft") || pathname.startsWith("/cart")) return null
 
   return (
     <nav
