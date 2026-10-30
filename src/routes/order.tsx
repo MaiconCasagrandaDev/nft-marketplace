@@ -11,6 +11,21 @@ const button =
   "rounded bg-brand px-5 py-2 text-sm font-bold text-primary-foreground hover:bg-brand-hover"
 const ghost = "rounded border border-brand px-5 py-2 text-sm font-bold text-brand hover:text-brand-hover"
 
+function shortHash(hash: string) {
+  return hash.length > 14 ? `${hash.slice(0, 6)}…${hash.slice(-4)}` : hash
+}
+
+function shortDate(iso: string) {
+  const d = new Date(iso)
+  const month = d.toLocaleString("pt-BR", { month: "short" }).replace(".", "")
+  return `${d.getDate()} ${month.charAt(0).toUpperCase()}${month.slice(1)}, ${d.getFullYear()}`
+}
+
+function tokenId(nftId: string) {
+  const digits = nftId.replace(/\D/g, "")
+  return `#${digits.padStart(4, "0")}`
+}
+
 export function OrderPage() {
   const { id } = useParams({ from: "/order/$id" })
   const qc = useQueryClient()
@@ -52,6 +67,151 @@ export function OrderPage() {
     )
   }
 
+  if (order.status === "confirmed") {
+    return (
+      <div className="mx-auto my-8 w-full max-w-[578px] border border-border bg-card">
+        <div className="relative px-6 pt-8 pb-6 text-center">
+          <Link
+            to="/"
+            aria-label="Fechar"
+            className="absolute top-4 right-4 text-2xl leading-none text-brand hover:text-brand-hover"
+          >
+            ×
+          </Link>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 64 64"
+            className="mx-auto mb-4 size-16 text-brand"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          >
+            <path d="M8 26 32 8l24 18v30H8z" />
+            <path d="M8 26l24 18 24-18" />
+            <path d="M18 14h28v22H18z" fill="var(--color-card, #241612)" />
+            <text
+              x="32"
+              y="24"
+              textAnchor="middle"
+              fontSize="7"
+              fontWeight="700"
+              fill="currentColor"
+              stroke="none"
+            >
+              THANK
+            </text>
+            <text
+              x="32"
+              y="32"
+              textAnchor="middle"
+              fontSize="7"
+              fontWeight="700"
+              fill="currentColor"
+              stroke="none"
+            >
+              YOU
+            </text>
+          </svg>
+          <h1 className="sr-only">Pedido confirmado</h1>
+          <p role="status" className="text-base font-medium text-text-soft">
+            Seus NFTs agora estão na sua carteira
+          </p>
+        </div>
+
+        <h2 className="sr-only">Pedido {order.id}</h2>
+        <dl className="grid grid-cols-2 gap-y-4 border-y border-brand px-6 py-4 text-xs sm:flex sm:justify-between sm:gap-0">
+          <div className="sm:whitespace-nowrap sm:pr-3">
+            <dt className="font-bold">ID da transação</dt>
+            <dd className="text-text-soft">{order.tx ? shortHash(order.tx.hash) : "—"}</dd>
+          </div>
+          <div className="sm:whitespace-nowrap sm:border-l sm:border-brand sm:px-3">
+            <dt className="text-text-soft">Data</dt>
+            <dd>{shortDate(order.createdAt)}</dd>
+          </div>
+          <div className="sm:whitespace-nowrap sm:border-l sm:border-brand sm:px-3">
+            <dt className="text-text-soft">Total</dt>
+            <dd>{formatEth(order.total)} ETH</dd>
+          </div>
+          <div className="sm:whitespace-nowrap sm:border-l sm:border-brand sm:pl-3">
+            <dt className="font-bold">Carteira</dt>
+            <dd className="text-text-soft">{order.wallet.label}</dd>
+          </div>
+        </dl>
+
+        <section aria-labelledby="o-itens" className="px-6 py-6">
+          <h2 id="o-itens" className="mb-3 text-sm font-bold">
+            Detalhes da transação
+          </h2>
+          <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 border-b border-border pb-2 text-sm font-bold">
+            <span>NFTs</span>
+            <span className="text-right text-text-soft">Edições</span>
+            <span className="min-w-20 text-right text-text-soft">Subtotal</span>
+          </div>
+          <ul>
+            {order.items.map((item) => (
+              <li
+                key={item.nftId}
+                className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 py-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <img src={item.image} alt="" className="size-[70px] shrink-0 rounded object-cover" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold">{item.name}</p>
+                    <p className="text-xs text-text-soft">ID do token: {tokenId(item.nftId)}</p>
+                  </div>
+                </div>
+                <span className="text-sm text-text-soft">(x {item.quantity})</span>
+                <span className="min-w-20 text-right font-bold text-brand">
+                  {formatEth(item.lineTotal)} ETH
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <dl className="mt-2 grid gap-2 border-b border-border pb-3 text-sm">
+            {Number(order.discount) > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-text-soft">Desconto</dt>
+                <dd>− {formatEth(order.discount)} ETH</dd>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <dt className="text-text-soft">Taxa de rede</dt>
+              <dd>{formatEth(order.networkFee)} ETH</dd>
+            </div>
+          </dl>
+          <div className="flex justify-between pt-3 text-base font-bold">
+            <span>Total</span>
+            <span className="text-brand">{formatEth(order.total)} ETH</span>
+          </div>
+        </section>
+
+        <p className="px-6 pb-6 text-center text-sm text-text-soft">
+          Transação confirmada na {networkLabels[order.network]}. A propriedade foi transferida para
+          sua carteira conectada e registrada na rede.
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-3 px-6 pb-8">
+          {order.tx && (
+            <a
+              href={order.tx.explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={button}
+            >
+              Ver no Etherscan
+            </a>
+          )}
+          <Link to="/" className={ghost}>
+            Continuar comprando
+          </Link>
+        </div>
+        <div className="h-2 bg-brand" aria-hidden="true" />
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto grid max-w-3xl gap-6 py-8">
       <header className="grid gap-2">
@@ -60,14 +220,6 @@ export function OrderPage() {
             <h1 className="text-2xl font-bold">Aguardando confirmação</h1>
             <p role="status" className="text-text-soft">
               Estamos aguardando a confirmação da transação na carteira. Não feche esta página.
-            </p>
-          </>
-        )}
-        {order.status === "confirmed" && (
-          <>
-            <h1 className="text-2xl font-bold text-brand">Pedido confirmado</h1>
-            <p role="status" className="text-text-soft">
-              Sua compra foi concluída. Guarde o recibo abaixo.
             </p>
           </>
         )}
@@ -105,22 +257,6 @@ export function OrderPage() {
             <dt className="text-text-soft">Rede</dt>
             <dd>{networkLabels[order.network]}</dd>
           </div>
-          {order.tx && (
-            <>
-              <div>
-                <dt className="text-text-soft">Transação (simulada)</dt>
-                <dd className="break-all">{order.tx.hash}</dd>
-              </div>
-              <div>
-                <dt className="text-text-soft">Bloco</dt>
-                <dd>{order.tx.blockNumber}</dd>
-              </div>
-              <div>
-                <dt className="text-text-soft">Explorador (simulado)</dt>
-                <dd className="break-all">{order.tx.explorerUrl}</dd>
-              </div>
-            </>
-          )}
         </dl>
       </section>
 
@@ -149,11 +285,6 @@ export function OrderPage() {
       </section>
 
       <div className="flex flex-wrap gap-3">
-        {order.status === "confirmed" && (
-          <Link to="/" className={button}>
-            Continuar comprando
-          </Link>
-        )}
         {order.status === "rejected" && (
           <>
             <Link to="/checkout" className={button}>
