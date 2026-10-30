@@ -30,7 +30,7 @@ export function Header() {
       <div className="flex h-11 items-stretch justify-between border-b-[0.3px] border-brand">
         <Link
           to="/"
-          className="flex items-center text-sm font-bold tracking-wider"
+          className="flex items-center text-base font-bold leading-[18px]"
         >
           KURIO
         </Link>
@@ -42,7 +42,7 @@ export function Header() {
           <Link to="/" className={cn(item, isHome && active)}>
             Início
           </Link>
-          <Link to="/" className={cn(item, isMarket && active)}>
+          <Link to="/" hash="catalogo" className={cn(item, isMarket && active)}>
             Mercado
           </Link>
           <button
@@ -63,20 +63,20 @@ export function Header() {
           </button>
         </nav>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-6">
           <button
             type="button"
             aria-label="Buscar"
             className="hover:text-brand-hover"
           >
-            <Search className="size-5" />
+            <Search className="size-6" />
           </button>
           <Link
             to="/cart"
             aria-label={`Carrinho, ${cartCount} itens`}
             className="relative hover:text-brand-hover"
           >
-            <ShoppingCart className="size-5" />
+            <ShoppingCart className="size-6" />
             {cartCount > 0 && (
               <span className="absolute -right-2 -top-2 grid size-4 place-items-center rounded-full bg-brand text-[10px] font-bold text-primary-foreground">
                 {cartCount}

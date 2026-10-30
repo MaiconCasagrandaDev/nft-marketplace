@@ -83,6 +83,7 @@ O `socket.io-client` é importado dinamicamente depois que o MSW inicia; caso co
 ## Desvios do Figma
 
 - Hero em português; abas "Novos lançamentos" e "Em alta" desabilitadas ("Em breve").
+- Menu do cabeçalho: "Criadores" e "Aprenda" aparecem como no Figma, mas ficam desativados ("Em breve"), pois o desafio não define essas telas. "Mercado" leva ao catálogo da Home.
 - Login e cadastro: no desktop seguem o modal do Figma (cartão de 500 px com as abas "Entrar | Criar conta", X para fechar e barra laranja), mas como página própria, sem a Home ao fundo; no mobile seguem os frames mobile. Login social e "esqueci a senha" ficam desativados ("Em breve"). A linha "Conta de teste" fica abaixo do cartão.
 - Favorito nos cards: só na versão mobile (como no Figma mobile); no desktop o favoritar fica no detalhe. A Lista de interesse (`/favorites`) é aberta pelo coração da barra inferior no mobile e pelo menu lateral da conta no desktop.
 - Detalhe: avaliações (19), chips de edição, miniaturas, atributos e textos de contrato/direitos são **conteúdo estático**, como no Figma; o ícone de X foi substituído pelo do Twitter em SVG; os títulos "Contrato" e "Direitos autorais" foram corrigidos para casar com o texto.

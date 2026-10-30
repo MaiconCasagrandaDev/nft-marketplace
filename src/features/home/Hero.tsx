@@ -15,7 +15,7 @@ export function Hero() {
   const next = slides[(index + 1) % slides.length]
 
   const dots = (
-    <div className="flex gap-1" role="group" aria-label="Destaques">
+    <div className="flex" role="group" aria-label="Destaques">
       {slides.map((_, i) => (
         <button
           key={i}
@@ -23,7 +23,7 @@ export function Hero() {
           aria-label={`Mostrar destaque ${i + 1}`}
           aria-current={i === index}
           onClick={() => setIndex(i)}
-          className="grid size-6 place-items-center"
+          className="grid h-6 w-4 place-items-center"
         >
           <span className={cn("size-2 rounded-full bg-brand", i !== index && "opacity-40")} />
         </button>
@@ -73,42 +73,45 @@ export function Hero() {
         <div className="absolute inset-x-0 bottom-1 flex justify-center">{dots}</div>
       </section>
 
-      {/* desktop */}
+      {/* desktop (Figma: 1200 x 527, gap 32, imagem 450 x 450 com raio 24) */}
       <section
         aria-labelledby="hero-title"
-        className="hidden items-center gap-8 md:grid md:py-8 lg:min-h-[527px] lg:grid-cols-[1fr_450px] lg:py-0"
+        className="hidden items-center gap-8 md:grid md:py-8 lg:h-[527px] lg:grid-cols-[1fr_450px] lg:py-0"
       >
-        <div className="relative flex h-full flex-col justify-center gap-6 lg:pl-6">
-          <p className="text-xs">Bem-vindo à Kurio</p>
-          <h1 id="hero-title" className="text-3xl font-bold leading-tight lg:text-[43px] lg:leading-[70px]">
+        <div className="relative flex h-full flex-col justify-center lg:pl-10">
+          <p className="mb-2 text-sm font-medium leading-4 tracking-[0.1em]">
+            Bem-vindo à Kurio
+          </p>
+          <h1
+            id="hero-title"
+            className="text-3xl font-bold leading-tight lg:text-[43px] lg:leading-[70px]"
+          >
             SEJA DONO DO FUTURO
             <br />
             DA ARTE DIGITAL
           </h1>
-          <p className="max-w-[430px] text-xs leading-relaxed text-text-soft">
+          <p className="max-w-[560px] text-sm leading-6 text-text-soft">
             Descubra NFTs selecionados de criadores emergentes e consagrados. Colecione arte digital
             rara, apoie artistas e tenha uma parte da cultura da internet.
           </p>
-          <div>
+          <div className="mt-8">
             <a
               href="#catalogo"
-              className="inline-block rounded-sm bg-brand px-5 py-2 text-xs font-bold text-primary-foreground hover:bg-brand-hover"
+              className="inline-flex h-10 w-[140px] items-center rounded-md bg-brand pl-7 pr-9 text-base font-bold text-primary-foreground hover:bg-brand-hover"
             >
               EXPLORAR
             </a>
           </div>
-          <div className="lg:absolute lg:bottom-10 lg:right-10">{dots}</div>
+          <div className="lg:absolute lg:bottom-20 lg:right-20">{dots}</div>
         </div>
 
-        <div className="rounded-2xl bg-card p-0">
-          <img
-            src={slide.image}
-            alt={slide.alt}
-            width={450}
-            height={450}
-            className="aspect-square w-full rounded-2xl object-cover"
-          />
-        </div>
+        <img
+          src={slide.image}
+          alt={slide.alt}
+          width={450}
+          height={450}
+          className="aspect-square w-full rounded-3xl object-cover"
+        />
       </section>
     </>
   )
