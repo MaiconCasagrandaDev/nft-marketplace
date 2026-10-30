@@ -71,7 +71,7 @@ O `socket.io-client` é importado dinamicamente depois que o MSW inicia; caso co
 
 - Hero em português; abas "Novos lançamentos" e "Em alta" desabilitadas ("Em breve").
 - Login e cadastro como páginas próprias (não há frames no Figma).
-- Sem coração de favorito nos cards (não está no Figma); favoritar fica no detalhe.
+- Favorito nos cards: só na versão mobile (como no Figma mobile); no desktop o favoritar fica no detalhe.
 - Detalhe: avaliações (19), chips de edição, miniaturas, atributos e textos de contrato/direitos são **conteúdo estático**, como no Figma; o ícone de X foi substituído pelo do Twitter em SVG; os títulos "Contrato" e "Direitos autorais" foram corrigidos para casar com o texto.
 - Pagamento: os campos do Figma sem equivalente no contrato (nome de usuário, nome do perfil, ENS/carteira secundária, código de indicação, nome ENS, "usar outra carteira" e observação) são exibidos mas não enviados nem validados; telefone não é coletado.
 - Newsletter: `POST /api/newsletter` simulado.

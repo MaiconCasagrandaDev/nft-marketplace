@@ -1,39 +1,70 @@
-import { Link, useRouterState } from "@tanstack/react-router"
-import { Search, ShoppingCart } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useCart } from "@/features/cart/useCart"
-import { AccountMenu } from "@/features/auth/AccountMenu"
+import { Link, useRouterState } from "@tanstack/react-router";
+import { Search, ShoppingCart } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useCart } from "@/features/cart/useCart";
+import { AccountMenu } from "@/features/auth/AccountMenu";
 
 export function Header() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const isHome = pathname === "/"
-  const isMarket = ["/nft", "/cart", "/checkout"].some((p) => pathname.startsWith(p))
-  const { data: cart } = useCart()
-  const cartCount = cart?.itemCount ?? 0
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isHome = pathname === "/";
+  const isMarket = ["/nft", "/cart", "/checkout"].some((p) =>
+    pathname.startsWith(p),
+  );
+  const { data: cart } = useCart();
+  const cartCount = cart?.itemCount ?? 0;
 
-  const item = "flex items-center border-b-2 border-transparent text-base"
-  const active = "border-brand text-brand-hover"
+  const item = "flex items-center border-b-2 border-transparent text-base";
+  const active = "border-brand text-brand-hover";
 
   return (
-    <header className="mx-auto w-full max-w-[1200px] px-4 pt-6 xl:px-0">
+    <header
+      className={cn(
+        "mx-auto w-full max-w-[1200px] px-4 pt-6 xl:px-0",
+        isHome && "hidden md:block",
+      )}
+    >
       <div className="flex h-11 items-stretch justify-between border-b-[0.3px] border-brand">
-        <Link to="/" className="flex items-center text-sm font-bold tracking-wider">
+        <Link
+          to="/"
+          className="flex items-center text-sm font-bold tracking-wider"
+        >
           KURIO
         </Link>
 
-        <nav aria-label="Principal" className="hidden items-stretch gap-10 md:flex">
-          <Link to="/" className={cn(item, isHome && active)}>Início</Link>
-          <Link to="/" className={cn(item, isMarket && active)}>Mercado</Link>
-          <button type="button" disabled title="Em breve" className={cn(item, "opacity-60")}>
+        <nav
+          aria-label="Principal"
+          className="hidden items-stretch gap-10 md:flex"
+        >
+          <Link to="/" className={cn(item, isHome && active)}>
+            Início
+          </Link>
+          <Link to="/" className={cn(item, isMarket && active)}>
+            Mercado
+          </Link>
+          <button
+            type="button"
+            disabled
+            title="Em breve"
+            className={cn(item, "opacity-60")}
+          >
             Criadores
           </button>
-          <button type="button" disabled title="Em breve" className={cn(item, "opacity-60")}>
+          <button
+            type="button"
+            disabled
+            title="Em breve"
+            className={cn(item, "opacity-60")}
+          >
             Aprenda
           </button>
         </nav>
 
         <div className="flex items-center gap-5">
-          <button type="button" aria-label="Buscar" className="hover:text-brand-hover">
+          <button
+            type="button"
+            aria-label="Buscar"
+            className="hover:text-brand-hover"
+          >
             <Search className="size-5" />
           </button>
           <Link
@@ -52,5 +83,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }
