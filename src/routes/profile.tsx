@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useRouter } from "@tanstack/react-router"
+import { Link, useNavigate, useRouter } from "@tanstack/react-router"
 import { ChevronLeft, Image as ImageIcon } from "lucide-react"
 import { useRef, useState, type ChangeEvent } from "react"
 import { useForm } from "react-hook-form"
@@ -11,7 +11,7 @@ import {
   useUpdateProfile,
   useUpdateWallet,
 } from "@/features/account/hooks"
-import { useSession } from "@/features/auth/useAuth"
+import { useLogout, useSession } from "@/features/auth/useAuth"
 import { useWallets } from "@/features/checkout/hooks"
 import { getApiError } from "@/lib/api"
 import type { User } from "@/types/auth"
@@ -214,6 +214,30 @@ function ProfileForm({ user, primary }: { user: User; primary?: Wallet }) {
   )
 }
 
+function MobileExtras() {
+  const navigate = useNavigate()
+  const logout = useLogout()
+  return (
+    <div className="mt-6 grid gap-3 md:hidden">
+      <Link
+        to="/wallets"
+        className="flex h-11 items-center justify-between rounded-xl border border-[#3a2217] px-4 text-sm text-brand"
+      >
+        Carteiras
+        <span aria-hidden="true">→</span>
+      </Link>
+      <button
+        type="button"
+        disabled={logout.isPending}
+        onClick={() => logout.mutate(undefined, { onSuccess: () => navigate({ to: "/" }) })}
+        className="h-11 rounded-xl border border-[#3a2217] text-sm font-bold text-brand"
+      >
+        Sair
+      </button>
+    </div>
+  )
+}
+
 export function ProfilePage() {
   const router = useRouter()
   const { user, isLoading } = useSession()
@@ -234,7 +258,7 @@ export function ProfilePage() {
         <h1 className="text-lg font-bold md:text-base">Perfil do colecionador</h1>
       </div>
 
-      <div className="md:mt-[18px]">
+      <div className="mt-4 md:mt-[18px]">
         {wallets.isError ? (
           <div role="alert" className="py-8 text-center">
             <p className="mb-4">Não foi possível carregar o perfil.</p>
@@ -249,7 +273,10 @@ export function ProfilePage() {
         ) : isLoading || !user || !wallets.data ? (
           <div className="shimmer h-64 bg-card" aria-busy="true" />
         ) : (
-          <ProfileForm user={user} primary={primary} />
+          <>
+            <ProfileForm user={user} primary={primary} />
+            <MobileExtras />
+          </>
         )}
       </div>
     </AccountShell>

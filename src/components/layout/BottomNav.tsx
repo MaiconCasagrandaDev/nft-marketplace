@@ -26,15 +26,14 @@ export function BottomNav() {
         >
           <Home className="size-5" />
         </Link>
-        <button
-          type="button"
-          disabled
-          title="Em breve"
-          aria-label="Favoritos (em breve)"
-          className={cn(side, "text-text-soft opacity-60")}
+        <Link
+          to={token ? "/favorites" : "/login"}
+          aria-label="Favoritos"
+          aria-current={pathname.startsWith("/favorites") ? "page" : undefined}
+          className={cn(side, pathname.startsWith("/favorites") ? "text-brand" : "text-text-soft")}
         >
           <Heart className="size-5" />
-        </button>
+        </Link>
 
         <Link
           to="/"

@@ -90,6 +90,13 @@ const walletsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/wallets"), "WalletsPage"),
 })
 
+const favoritesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/favorites",
+  beforeLoad: requireAuth,
+  component: lazyRouteComponent(() => import("@/routes/favorites"), "FavoritesPage"),
+})
+
 const routeTree = rootRoute.addChildren([
   homeRoute,
   nftRoute,
@@ -100,6 +107,7 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   profileRoute,
   walletsRoute,
+  favoritesRoute,
 ])
 
 export const router = createRouter({

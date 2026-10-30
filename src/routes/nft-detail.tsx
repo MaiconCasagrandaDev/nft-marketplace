@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams, useRouter } from "@tanstack/react-router"
 import axios from "axios";
 import { ChevronLeft, Mail, Minus, Plus, Search, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
+import Decimal from "decimal.js";
 import { useAddToCart } from "@/features/cart/useCart";
 import { NftCarousel } from "@/features/catalog/NftCarousel";
 import { useNft } from "@/features/catalog/useNft";
@@ -83,6 +84,7 @@ export function NftDetailPage() {
   }
 
   const soldOut = nft.available === 0;
+  const total = new Decimal(nft.price).times(qty).toString();
   const shareUrl = encodeURIComponent(window.location.href);
   const shareText = encodeURIComponent(`${nft.name} na Kurio`);
 
@@ -270,7 +272,7 @@ export function NftDetailPage() {
               {/* preço visual da barra mobile (escrito por CSS para não duplicar o texto na página) */}
               <span
                 aria-hidden="true"
-                data-price={`${formatEth(nft.price)} ETH`}
+                data-price={`${formatEth(total)} ETH`}
                 className="ml-auto text-xl font-bold text-brand before:content-[attr(data-price)] md:hidden"
               />
             </div>
