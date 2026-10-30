@@ -6,7 +6,13 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores([
+    'dist',
+    'public/mockServiceWorker.js',
+    'playwright-report',
+    'test-results',
+    'reports',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -17,6 +23,22 @@ export default defineConfig([
     ],
     languageOptions: {
       globals: globals.browser,
+    },
+    rules: {
+      // regra só do recarregamento automático em dev (HMR); não afeta o build
+      'react-refresh/only-export-components': 'off',
+      // variáveis iniciadas por "_" são ignoradas de propósito
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+        },
+      ],
+      // aviso sobre watch() do react-hook-form no React Compiler
+      'react-hooks/incompatible-library': 'off',
     },
   },
 ])

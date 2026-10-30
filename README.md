@@ -13,10 +13,13 @@ Vite + React + TypeScript (`strict`) · Tailwind CSS v4 · shadcn/ui (Radix) · 
 
 ```bash
 npm ci
-npm run dev          # http://localhost:5173
+npm run dev          # http://localhost:5173 (com mocks MSW)
 npm run build        # tsc -b && vite build
-npm run preview      # serve o build
+npm run preview      # serve o build em http://localhost:4173
+npm run typecheck    # verificação de tipos
+npm run lint         # ESLint
 npm run test:e2e     # Playwright (faz o build e serve em :4173 sozinho)
+npm run lighthouse   # auditoria Lighthouse (com o preview rodando); relatório em reports/lighthouse/
 ```
 
 ### Variáveis de ambiente
@@ -81,7 +84,15 @@ npx playwright install chromium   # primeira vez
 npm run test:e2e
 ```
 
-16 testes, sempre com MSW (sem dados fixos na UI): catálogo com estado na URL, rota privada redirecionando ao login, compra completa até o pedido confirmado, mudança de preço na revisão, pagamento recusado, timeout com idempotência, rollback de favorito, preço ao vivo por socket, evento duplicado/atrasado, reconciliação após queda do socket, edição de perfil (com persistência ao navegar), validação de campos e senha atual incorreta, e o ciclo de carteiras (criar secundária, tornar principal e excluir), e favoritar no detalhe levando o NFT para a Lista de interesse.
+16 testes, sempre com MSW (sem dados fixos na UI), em Chromium desktop:
+
+- **Catálogo** (`catalog.spec.ts`): busca vinda da URL que sobrevive ao recarregar; ordenação e página na URL.
+- **Compra** (`purchase.spec.ts`): rota privada redirecionando ao login; compra completa do detalhe até o pedido confirmado; mudança de preço na revisão exigindo confirmar os novos valores.
+- **Falhas** (`failures.spec.ts`): pagamento recusado mantendo os itens no carrinho; timeout na confirmação sem duplicar o pedido (idempotência); rollback de favorito quando a API falha.
+- **Tempo real** (`realtime.spec.ts`): preço ao vivo por socket; evento duplicado e evento atrasado ignorados; reconciliação com a API após queda do socket.
+- **Conta** (`account.spec.ts`): edição de perfil com persistência ao navegar; validação de campos e senha atual incorreta; ciclo de carteiras (criar secundária, tornar principal e excluir).
+- **Favoritos** (`favorites.spec.ts`): favoritar no detalhe leva o NFT para a Lista de interesse.
+- **Smoke** (`smoke.spec.ts`): o app sobe com a API simulada e mostra um NFT.
 
 ## Desempenho e acessibilidade
 
