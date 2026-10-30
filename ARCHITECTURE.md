@@ -14,19 +14,19 @@ UI (features) → hooks TanStack Query → axios (/api) → MSW handlers → db 
 
 Base `/api`. Erros: `{ code, message, available?, fields? }`. Erros de validação voltam com `422` e `fields` (mensagem por campo), que os formulários exibem junto de cada campo.
 
-| Método e rota | Descrição |
-| --- | --- |
-| `GET /nfts`, `/nfts/facets`, `/nfts/:id` | Catálogo paginado, facetas, detalhe. |
-| `POST /auth/login`, `/auth/register`, `GET /auth/me`, `POST /auth/logout` | Sessão por token Bearer (expira em 1 h). |
-| `PATCH /auth/me` | Atualiza nome de exibição, usuário, e-mail, ENS e avatar (data URL de até ~300 kB). Valida formato e unicidade de usuário e e-mail. |
-| `POST /auth/password` | Troca a senha; exige a senha atual (`422` com `fields.currentPassword` se estiver errada). |
-| `GET/POST/PATCH/DELETE /cart…` | Carrinho; cupom em `/cart/coupon`. O carrinho de visitante é mesclado ao do usuário no login. |
-| `GET/PUT/DELETE /favorites…` | Favoritos por usuário. |
-| `GET /wallets`, `POST /wallets/:id/connect` | Carteiras do usuário e conexão (cenário simulado). |
-| `POST /wallets`, `PATCH /wallets/:id`, `DELETE /wallets/:id` | Cria, edita e exclui carteiras. Endereço EVM (`0x` + 40 hex) ou Solana; endereço repetido → `422`; só uma carteira principal por usuário; excluir a única carteira → `409 LAST_WALLET`; excluir a principal promove outra. |
-| `GET /checkout/quote` | Cotação com `quoteId` (hash de itens, preços, cupom, taxa e total) e `issues` de disponibilidade. |
-| `POST /orders` | Cria o pedido. Exige `Idempotency-Key` e `quoteId`. |
-| `GET /orders/:id` | Pedido do próprio usuário (de outro usuário → 404). |
+| Método e rota                                                             | Descrição                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /nfts`, `/nfts/facets`, `/nfts/:id`                                  | Catálogo paginado, facetas, detalhe.                                                                                                                                                                                       |
+| `POST /auth/login`, `/auth/register`, `GET /auth/me`, `POST /auth/logout` | Sessão por token Bearer (expira em 1 h).                                                                                                                                                                                   |
+| `PATCH /auth/me`                                                          | Atualiza nome de exibição, usuário, e-mail, ENS e avatar (data URL de até ~300 kB). Valida formato e unicidade de usuário e e-mail.                                                                                        |
+| `POST /auth/password`                                                     | Troca a senha; exige a senha atual (`422` com `fields.currentPassword` se estiver errada).                                                                                                                                 |
+| `GET/POST/PATCH/DELETE /cart…`                                            | Carrinho; cupom em `/cart/coupon`. O carrinho de visitante é mesclado ao do usuário no login.                                                                                                                              |
+| `GET/PUT/DELETE /favorites…`                                              | Favoritos por usuário.                                                                                                                                                                                                     |
+| `GET /wallets`, `POST /wallets/:id/connect`                               | Carteiras do usuário e conexão (cenário simulado).                                                                                                                                                                         |
+| `POST /wallets`, `PATCH /wallets/:id`, `DELETE /wallets/:id`              | Cria, edita e exclui carteiras. Endereço EVM (`0x` + 40 hex) ou Solana; endereço repetido → `422`; só uma carteira principal por usuário; excluir a única carteira → `409 LAST_WALLET`; excluir a principal promove outra. |
+| `GET /checkout/quote`                                                     | Cotação com `quoteId` (hash de itens, preços, cupom, taxa e total) e `issues` de disponibilidade.                                                                                                                          |
+| `POST /orders`                                                            | Cria o pedido. Exige `Idempotency-Key` e `quoteId`.                                                                                                                                                                        |
+| `GET /orders/:id`                                                         | Pedido do próprio usuário (de outro usuário → 404).                                                                                                                                                                        |
 
 Pedido: `pending → confirmed | rejected`. A confirmação só ocorre após a resposta da simulação (liquidação em ~2,5 s); apenas os itens comprados saem do carrinho e o estoque é decrementado na confirmação.
 
@@ -62,7 +62,7 @@ Envelope: `{ id, type, resource, version, occurredAt, data }`, com os tipos `nft
 5. Os avisos aparecem numa região `aria-live` (`LiveNotices`) no carrinho, no checkout e no detalhe do NFT.
 6. No checkout, uma mudança de preço gera nova cotação e a revisão exige confirmar os novos valores.
 
-O `socket.io-client` é importado dinamicamente depois que o MSW inicia; caso contrário ele captura o `WebSocket` nativo antes da interceptação. O servidor falso envia ping do Engine.IO a cada 5 s para evitar *ping timeout*.
+O `socket.io-client` é importado dinamicamente depois que o MSW inicia; caso contrário ele captura o `WebSocket` nativo antes da interceptação. O servidor falso envia ping do Engine.IO a cada 5 s para evitar _ping timeout_.
 
 ## Desempenho e acessibilidade
 
@@ -76,7 +76,7 @@ O `socket.io-client` é importado dinamicamente depois que o MSW inicia; caso co
 - Dados e "blockchain" são simulados; o hash de transação e o link do explorer são fictícios.
 - O banco vive no `localStorage` do navegador e não é compartilhado entre navegadores.
 - A URL de realtime é fictícia (`wss://realtime.kurio.test`) e só funciona com o MSW ativo.
-- O `@mswjs/socket.io-binding` não tem *broadcast*: o servidor falso mantém seu próprio registro de clientes.
+- O `@mswjs/socket.io-binding` não tem _broadcast_: o servidor falso mantém seu próprio registro de clientes.
 - O MSW é carregado antes da tela montar, o que pesa no Total Blocking Time (veja acima).
 - O avatar é guardado como data URL no banco simulado (limite de ~150 KB na interface).
 
@@ -84,9 +84,9 @@ O `socket.io-client` é importado dinamicamente depois que o MSW inicia; caso co
 
 - Hero em português; abas "Novos lançamentos" e "Em alta" desabilitadas ("Em breve").
 - Login e cadastro: no desktop seguem o modal do Figma (cartão de 500 px com as abas "Entrar | Criar conta", X para fechar e barra laranja), mas como página própria, sem a Home ao fundo; no mobile seguem os frames mobile. Login social e "esqueci a senha" ficam desativados ("Em breve"). A linha "Conta de teste" fica abaixo do cartão.
-- Favorito nos cards: só na versão mobile (como no Figma mobile); no desktop o favoritar fica no detalhe. Na barra inferior mobile, "Favoritos" está desativado ("Em breve").
+- Favorito nos cards: só na versão mobile (como no Figma mobile); no desktop o favoritar fica no detalhe. A Lista de interesse (`/favorites`) é aberta pelo coração da barra inferior no mobile e pelo menu lateral da conta no desktop.
 - Detalhe: avaliações (19), chips de edição, miniaturas, atributos e textos de contrato/direitos são **conteúdo estático**, como no Figma; o ícone de X foi substituído pelo do Twitter em SVG; os títulos "Contrato" e "Direitos autorais" foram corrigidos para casar com o texto.
 - Pagamento: os campos do Figma sem equivalente no contrato (nome de usuário, nome do perfil, ENS/carteira secundária, código de indicação, nome ENS, "usar outra carteira" e observação) são exibidos mas não enviados nem validados; telefone não é coletado. No mobile, a lista de provedores de carteira é apenas visual.
-- Perfil e Carteiras: o menu lateral "Meu perfil" mostra todos os itens do Figma, mas só **Dados do perfil** e **Carteiras** têm tela; Atividade, Lista de interesse, Ofertas, Arquivos baixados e Suporte ficam desativados ("Em breve"). "Apelido da carteira" (Perfil) edita o apelido da carteira principal. A troca de senha fica no mesmo formulário e só roda se os campos forem preenchidos.
+- Perfil e Carteiras: o menu lateral "Meu perfil" mostra todos os itens do Figma, mas só **Dados do perfil**, **Carteiras** e **Lista de interesse** têm tela; Atividade, Ofertas, Arquivos baixados e Suporte ficam desativados ("Em breve"). "Apelido da carteira" (Perfil) edita o apelido da carteira principal. A troca de senha fica no mesmo formulário e só roda se os campos forem preenchidos.
 - Carteiras: "Tipo de carteira", "Código de indicação" e "ENS ou carteira secundária (opcional)" não têm equivalente no contrato e aparecem desativados. Nome de exibição, nome do perfil, e-mail e ENS dessa tela editam o perfil junto da carteira. O **Adicionar** do topo cadastra uma nova carteira principal; "Igual à carteira principal" é só estado local (desativa o botão Adicionar da secundária).
-- Mobile: o Figma traz frames mobile de Início, Detalhes, Carrinho, Pagamento, Login e Cadastro, e a versão de 375 px segue esses frames. Confirmação do pedido, Perfil e Carteiras não têm frame mobile: são adaptações próprias (coluna única; o menu lateral vira abas).
+- Mobile: o Figma traz frames mobile de Início, Detalhes, Carrinho, Pagamento, Login e Cadastro, e a versão de 375 px segue esses frames. Esses frames só têm a barra inferior, então nas páginas de conta (Perfil, Carteiras e Lista de interesse) o cabeçalho do site fica oculto no mobile. Confirmação do pedido, Perfil, Carteiras e Lista de interesse não têm frame mobile: são adaptações próprias (coluna única, sem menu lateral). Para chegar às Carteiras e sair da conta, a página de Perfil traz, só no mobile, um link "Carteiras" e o botão "Sair" no fim.

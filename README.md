@@ -16,7 +16,7 @@ npm ci
 npm run dev          # http://localhost:5173
 npm run build        # tsc -b && vite build
 npm run preview      # serve o build
-npm run test:e2e     # Playwright (sobe o servidor sozinho)
+npm run test:e2e     # Playwright (faz o build e serve em :4173 sozinho)
 ```
 
 ### Variáveis de ambiente
@@ -43,7 +43,8 @@ Também é possível criar uma conta em **Entrar → Criar conta**.
 - **Carrinho → Pagamento → Pedido:** cotação com `quoteId`, confirmação de novos valores, pedido idempotente e confirmação só após a resposta da simulação.
 - **Perfil (`/profile`):** dados do colecionador, avatar e troca de senha (requer login).
 - **Carteiras (`/wallets`):** carteira principal e secundárias, com criar, editar, tornar principal e excluir (requer login).
-- **Responsivo:** desktop e mobile (375 px), com navegação inferior no celular.
+- **Lista de interesse (`/favorites`):** NFTs favoritados do usuário, com os mesmos cards do catálogo (requer login).
+- **Responsivo:** desktop e mobile (375 px). No celular a navegação é só pela barra inferior; no desktop, pelo cabeçalho e pelo menu lateral da conta.
 
 ## Banco simulado, cenários e reset
 
@@ -80,7 +81,7 @@ npx playwright install chromium   # primeira vez
 npm run test:e2e
 ```
 
-15 testes, sempre com MSW (sem dados fixos na UI): catálogo com estado na URL, rota privada redirecionando ao login, compra completa até o pedido confirmado, mudança de preço na revisão, pagamento recusado, timeout com idempotência, rollback de favorito, preço ao vivo por socket, evento duplicado/atrasado, reconciliação após queda do socket, edição de perfil (com persistência ao navegar), validação de campos e senha atual incorreta, e o ciclo de carteiras (criar secundária, tornar principal e excluir).
+16 testes, sempre com MSW (sem dados fixos na UI): catálogo com estado na URL, rota privada redirecionando ao login, compra completa até o pedido confirmado, mudança de preço na revisão, pagamento recusado, timeout com idempotência, rollback de favorito, preço ao vivo por socket, evento duplicado/atrasado, reconciliação após queda do socket, edição de perfil (com persistência ao navegar), validação de campos e senha atual incorreta, e o ciclo de carteiras (criar secundária, tornar principal e excluir), e favoritar no detalhe levando o NFT para a Lista de interesse.
 
 ## Desempenho e acessibilidade
 
