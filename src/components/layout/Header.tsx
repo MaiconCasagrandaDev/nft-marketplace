@@ -20,7 +20,7 @@ export function Header() {
     <header
       className={cn(
         "mx-auto w-full max-w-[1200px] px-4 pt-6 xl:px-0",
-        isHome && "hidden md:block",
+        (isHome || pathname.startsWith("/nft")) && "hidden md:block",
       )}
     >
       <div className="flex h-11 items-stretch justify-between border-b-[0.3px] border-brand">

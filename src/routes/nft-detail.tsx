@@ -1,6 +1,6 @@
-import { useNavigate, useParams, Link } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import axios from "axios";
-import { Mail, Minus, Plus, Search, Star } from "lucide-react";
+import { ChevronLeft, Mail, Minus, Plus, Search, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
 import { useAddToCart } from "@/features/cart/useCart";
 import { NftCarousel } from "@/features/catalog/NftCarousel";
@@ -15,7 +15,7 @@ const REVIEWS = 19;
 
 function Breadcrumb() {
   return (
-    <nav aria-label="Navegação" className="pt-8 text-sm font-bold">
+    <nav aria-label="Navegação" className="hidden pt-8 text-sm font-bold md:block">
       <Link to="/" className="hover:text-brand-hover">
         Início
       </Link>
@@ -30,6 +30,7 @@ function Breadcrumb() {
 export function NftDetailPage() {
   const { id } = useParams({ from: "/nft/$id" });
   const navigate = useNavigate();
+  const router = useRouter();
   const { data: nft, isPending, error, refetch } = useNft(id);
   const add = useAddToCart();
   const [qty, setQty] = useState(1);
@@ -37,6 +38,7 @@ export function NftDetailPage() {
   const [edition, setEdition] = useState("1/50");
   const [thumb, setThumb] = useState(0);
   const [tab, setTab] = useState<"details" | "reviews">("details");
+  const [added, setAdded] = useState(false);
 
   if (isPending) {
     return (
@@ -95,14 +97,43 @@ export function NftDetailPage() {
     );
   };
 
+  const addOnly = () => {
+    setMessage(null);
+    setAdded(false);
+    add.mutate(
+      { nftId: nft.id, quantity: qty },
+      {
+        onSuccess: () => setAdded(true),
+        onError: (e) => setMessage(getApiError(e).message),
+      },
+    );
+  };
+
   return (
-    <div>
+    <div className="pb-44 md:pb-0">
       <Breadcrumb />
 
-      <article className="grid gap-8 pb-16 pt-3 lg:grid-cols-[520px_1fr] lg:gap-[30px]">
+      {/* topo mobile: voltar + favorito (Figma mobile) */}
+      <div className="flex items-center justify-between pt-4 md:hidden">
+        <button
+          type="button"
+          aria-label="Voltar"
+          onClick={() => router.history.back()}
+          className="grid size-9 place-items-center rounded-full border border-border text-brand"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <FavoriteButton
+          nftId={nft.id}
+          nftName={nft.name}
+          className="border border-border text-brand"
+        />
+      </div>
+
+      <article className="grid gap-0 pb-10 pt-3 md:gap-8 md:pb-16 lg:grid-cols-[520px_1fr] lg:gap-[30px]">
         <div className="flex flex-col-reverse gap-3 md:flex-row md:gap-[14px]">
           <div
-            className="flex gap-3 md:flex-col"
+            className="hidden gap-3 md:flex md:flex-col"
             role="group"
             aria-label="Miniaturas"
           >
@@ -126,28 +157,37 @@ export function NftDetailPage() {
             ))}
           </div>
 
-          <div className="relative min-w-0 flex-1 self-start bg-card p-[18px]">
+          <div className="relative min-w-0 flex-1 self-start md:bg-card md:p-[18px]">
             <img
               src={nft.image}
               alt={nft.name}
-              className="aspect-square w-full rounded-2xl object-cover"
+              className="aspect-square w-full rounded-3xl object-cover md:rounded-2xl"
             />
             <a
               href={nft.image}
               target="_blank"
               rel="noreferrer"
               aria-label="Ampliar imagem"
-              className="absolute right-5 top-5 grid size-6 place-items-center rounded-full bg-background/80 text-brand hover:text-brand-hover"
+              className="absolute right-3 top-3 grid size-6 place-items-center rounded-full bg-background/80 text-brand hover:text-brand-hover md:right-5 md:top-5"
             >
               <Search className="size-4" />
             </a>
           </div>
         </div>
 
-        <div className="grid content-start gap-3">
-          <h1 className="text-3xl font-bold">{nft.name}</h1>
+        {/* painel de informações: sobe sobre a imagem no mobile */}
+        <div className="relative -mx-4 -mt-12 grid content-start gap-3 rounded-t-[32px] bg-card px-6 pb-4 pt-6 md:m-0 md:rounded-none md:bg-transparent md:p-0">
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-2xl font-bold md:text-3xl">{nft.name}</h1>
+            <span className="flex shrink-0 items-center gap-1 rounded-full border border-brand px-2.5 py-1 text-xs font-bold md:hidden">
+              <Star className="size-3.5 fill-brand text-brand" aria-hidden="true" />
+              4.8
+              <span className="font-normal text-text-soft">({REVIEWS})</span>
+            </span>
+          </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
+          {/* preço e avaliações: só desktop (no mobile o preço fica na barra) */}
+          <div className="hidden flex-wrap items-center justify-between gap-2 border-b border-border pb-2 md:flex">
             <p className="text-2xl font-bold text-brand">
               {formatEth(nft.price)} ETH
               {nft.previousPrice && (
@@ -171,7 +211,7 @@ export function NftDetailPage() {
           </div>
 
           <div>
-            <h2 className="mb-1 text-sm font-bold">Sobre este NFT:</h2>
+            <h2 className="mb-1 hidden text-sm font-bold md:block">Sobre este NFT:</h2>
             <p className="text-sm leading-6 text-text-soft">
               {nft.description}
             </p>
@@ -202,8 +242,10 @@ export function NftDetailPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
-            <div className="flex items-center gap-3">
+          {/* barra de compra: 2 linhas fixas no rodapé no mobile; em linha no desktop */}
+          <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col gap-3 rounded-t-3xl bg-[#1d120d] px-6 pb-5 pt-4 shadow-[0_-4px_20px_rgba(0,0,0,0.4)] md:static md:z-auto md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-4 md:rounded-none md:bg-transparent md:p-0 md:pt-1 md:shadow-none">
+            <div className="flex w-full items-center gap-3 md:w-auto">
+              <span className="text-xs text-text-soft md:hidden">Qtd.</span>
               <button
                 type="button"
                 aria-label="Diminuir quantidade"
@@ -225,18 +267,40 @@ export function NftDetailPage() {
               >
                 <Plus className="size-4" />
               </button>
+              {/* preço visual da barra mobile (escrito por CSS para não duplicar o texto na página) */}
+              <span
+                aria-hidden="true"
+                data-price={`${formatEth(nft.price)} ETH`}
+                className="ml-auto text-xl font-bold text-brand before:content-[attr(data-price)] md:hidden"
+              />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex w-full items-center gap-3 md:w-auto">
               <button
                 type="button"
                 onClick={buy}
                 disabled={soldOut || add.isPending}
-                className="h-[34px] w-[115px] rounded bg-brand text-xs font-bold text-primary-foreground hover:bg-brand-hover disabled:opacity-50"
+                className="h-14 flex-1 rounded-full bg-brand text-base font-bold text-primary-foreground hover:bg-brand-hover disabled:opacity-50 md:h-[34px] md:w-[115px] md:flex-none md:rounded md:text-xs"
               >
-                {add.isPending ? "Adicionando..." : "COMPRAR"}
+                {add.isPending ? (
+                  "Adicionando..."
+                ) : (
+                  <>
+                    <span className="md:hidden">Comprar NFT</span>
+                    <span className="hidden md:inline">COMPRAR</span>
+                  </>
+                )}
               </button>
-              <div className="[&_button]:inline-flex! [&_button]:h-[34px]! [&_button]:w-[115px]! [&_button]:items-center! [&_button]:justify-center! [&_button]:gap-2! [&_button]:rounded! [&_button]:px-0! [&_button]:text-xs! [&_svg]:size-4!">
+              <button
+                type="button"
+                aria-label="Adicionar ao carrinho"
+                onClick={addOnly}
+                disabled={soldOut || add.isPending}
+                className="grid size-14 shrink-0 place-items-center rounded-full bg-[#241612] text-brand disabled:opacity-50 md:hidden"
+              >
+                <ShoppingCart className="size-5" />
+              </button>
+              <div className="hidden md:block [&_button]:inline-flex! [&_button]:h-[34px]! [&_button]:w-[115px]! [&_button]:items-center! [&_button]:justify-center! [&_button]:gap-2! [&_button]:rounded! [&_button]:px-0! [&_button]:text-xs! [&_svg]:size-4!">
                 <FavoriteButton nftId={nft.id} nftName={nft.name} showLabel />
               </div>
             </div>
@@ -245,6 +309,12 @@ export function NftDetailPage() {
           {message && (
             <p role="alert" className="text-red-400">
               {message}
+            </p>
+          )}
+
+          {added && (
+            <p role="status" className="text-sm text-brand">
+              Adicionado ao carrinho.
             </p>
           )}
 
@@ -304,8 +374,11 @@ export function NftDetailPage() {
         </div>
       </article>
 
-      <section aria-label="Informações do NFT" className="pb-16">
-        <div role="tablist" className="flex gap-8 border-b border-border">
+      <section aria-label="Informações do NFT" className="pb-10 md:pb-16">
+        <div
+          role="tablist"
+          className="flex gap-8 overflow-x-auto whitespace-nowrap border-b border-border"
+        >
           <button
             type="button"
             role="tab"
