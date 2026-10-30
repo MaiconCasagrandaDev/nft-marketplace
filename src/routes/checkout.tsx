@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
+import { ChevronLeft, MoreVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,6 +18,7 @@ import { Totals } from "@/features/checkout/Totals";
 import { getApiError } from "@/lib/api";
 import { formatEth } from "@/lib/format";
 import { networkLabels } from "@/lib/labels";
+import { cn } from "@/lib/utils";
 import type { CreateOrderInput } from "@/types/checkout";
 import type { Network } from "@/types/nft";
 
@@ -31,6 +33,12 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
+const PROVIDERS = [
+  { name: "WalletConnect", letter: "W" },
+  { name: "MetaMask", letter: "M" },
+  { name: "Coinbase Wallet", letter: "C" },
+];
+
 const shortAddress = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const button =
   "rounded bg-brand px-5 py-2 text-sm font-bold text-primary-foreground hover:bg-brand-hover disabled:opacity-60";
@@ -39,6 +47,8 @@ const ghost =
 const input = "h-10 w-full border border-border bg-background px-3 text-sm";
 const cell = "grid content-start gap-1.5";
 const label = "text-sm";
+const radio =
+  "size-5 shrink-0 appearance-none rounded-full border border-[#5a3a28] bg-transparent checked:border-[#D28A4C] checked:bg-[radial-gradient(circle,#D28A4C_42%,transparent_46%)]";
 
 function Star() {
   return <span className="text-brand"> *</span>;
@@ -46,7 +56,7 @@ function Star() {
 
 function Breadcrumb() {
   return (
-    <nav aria-label="Navegação" className="pt-8 text-sm font-bold">
+    <nav aria-label="Navegação" className="hidden pt-8 text-sm font-bold md:block">
       <Link to="/" className="hover:text-brand-hover">
         Início
       </Link>
@@ -57,6 +67,23 @@ function Breadcrumb() {
       {" / "}
       <span>Pagamento</span>
     </nav>
+  );
+}
+
+function MobileTop() {
+  const router = useRouter();
+  return (
+    <div className="relative flex items-center justify-center py-4 md:hidden">
+      <button
+        type="button"
+        aria-label="Voltar"
+        onClick={() => router.history.back()}
+        className="absolute left-0 grid size-9 place-items-center rounded-full bg-[#3a2217] text-brand"
+      >
+        <ChevronLeft className="size-5" />
+      </button>
+      <h1 className="text-lg font-bold">Pagamento com carteira</h1>
+    </div>
   );
 }
 
@@ -77,6 +104,7 @@ export function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [reviewedQuoteId, setReviewedQuoteId] = useState<string | null>(null);
   const [uncertain, setUncertain] = useState(false);
+  const [provider, setProvider] = useState("Coinbase Wallet");
 
   const {
     register,
@@ -120,6 +148,7 @@ export function CheckoutPage() {
     return (
       <div>
         <Breadcrumb />
+        <MobileTop />
         <div
           className="grid gap-8 py-6 lg:grid-cols-[1fr_405px]"
           aria-busy="true"
@@ -152,11 +181,14 @@ export function CheckoutPage() {
   const q = quote.data;
   if (q.items.length === 0 && step === "form") {
     return (
-      <div className="py-16 text-center">
-        <h1 className="mb-2 text-2xl font-bold">Seu carrinho está vazio</h1>
-        <Link to="/" className="text-brand hover:text-brand-hover">
-          Voltar ao catálogo
-        </Link>
+      <div>
+        <MobileTop />
+        <div className="py-16 text-center">
+          <h2 className="mb-2 text-2xl font-bold">Seu carrinho está vazio</h2>
+          <Link to="/" className="text-brand hover:text-brand-hover">
+            Voltar ao catálogo
+          </Link>
+        </div>
       </div>
     );
   }
@@ -286,8 +318,9 @@ export function CheckoutPage() {
   return (
     <div>
       <Breadcrumb />
+      <MobileTop />
 
-      <div className="grid gap-10 pb-16 pt-6 lg:grid-cols-[1fr_405px] lg:gap-[30px]">
+      <div className="grid gap-6 pb-10 pt-2 md:gap-10 md:pb-16 md:pt-6 lg:grid-cols-[1fr_405px] lg:gap-[30px]">
         <div className="grid content-start gap-6">
           {notice && (
             <p role="alert" className="border border-brand p-3 text-sm">
@@ -295,8 +328,125 @@ export function CheckoutPage() {
             </p>
           )}
 
+                    {/* tela mobile do Figma: carteira, carteira e rede, total */}
           {step === "form" && (
-            <section aria-labelledby="c-perfil" className="grid gap-5">
+            <section aria-label="Pagamento com carteira" className="grid gap-5 md:hidden">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold">
+                  {connected ? "Carteira conectada" : "Selecione a carteira"}
+                </h2>
+                {connected && (
+                  <button
+                    type="button"
+                    onClick={() => setConnectedKey(null)}
+                    className="text-xs font-bold text-brand"
+                  >
+                    Trocar carteira
+                  </button>
+                )}
+              </div>
+
+              <ul className="grid gap-4">
+                {wallets.data.map((w) => (
+                  <li key={w.id}>
+                    <label className="flex cursor-pointer items-start gap-4 rounded-2xl bg-card p-5 has-[:checked]:ring-1 has-[:checked]:ring-brand/60">
+                      <input
+                        type="radio"
+                        name="m-wallet"
+                        value={w.id}
+                        checked={values.walletId === w.id}
+                        onChange={() => pickWallet(w.id)}
+                        className={`${radio} mt-0.5`}
+                      />
+                      <span className="grid flex-1 gap-1">
+                        <span className="text-sm font-bold">{w.label}</span>
+                        <span className="text-xs text-text-soft">{shortAddress(w.address)}</span>
+                        <span className="text-xs text-text-soft">
+                          Rede {networkLabels[w.network]}
+                        </span>
+                      </span>
+                      <MoreVertical
+                        aria-hidden="true"
+                        className="size-4 shrink-0 self-center text-brand"
+                      />
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              {errors.walletId && (
+                <p role="alert" className="text-sm text-red-400">
+                  {errors.walletId.message}
+                </p>
+              )}
+
+              <h2 className="text-sm font-bold">Carteira e rede</h2>
+              <ul className="grid gap-3">
+                {PROVIDERS.map((p) => (
+                  <li key={p.name}>
+                    <label className="flex cursor-pointer items-center gap-4 rounded-2xl bg-card px-4 py-4">
+                      <span
+                        aria-hidden="true"
+                        className="grid size-10 place-items-center rounded-full bg-[#3a2217] text-xs font-bold text-brand"
+                      >
+                        {p.letter}
+                      </span>
+                      <span className="flex-1 text-xs">{p.name}</span>
+                      <input
+                        type="radio"
+                        name="m-provider"
+                        value={p.name}
+                        checked={provider === p.name}
+                        onChange={() => setProvider(p.name)}
+                        className={radio}
+                      />
+                    </label>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex items-center justify-end gap-6 text-sm font-bold">
+                <span>Total:</span>
+                <span
+                  aria-hidden="true"
+                  data-v={`${formatEth(q.total)} ETH`}
+                  className="text-base text-brand before:content-[attr(data-v)]"
+                />
+              </div>
+
+              {connectError && (
+                <p role="alert" className="text-sm text-red-400">
+                  {connectError}
+                </p>
+              )}
+              {(errors.fullName || errors.email) && (
+                <p role="alert" className="text-sm text-red-400">
+                  Complete nome e e-mail da conta para continuar.
+                </p>
+              )}
+
+              {connected ? (
+                <button
+                  type="submit"
+                  form="checkout-form"
+                  className="mt-6 h-14 rounded-full bg-gradient-to-r from-[#d99a5f] to-[#a8683a] text-sm font-bold text-primary-foreground"
+                >
+                  Revisar pedido
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onConnect}
+                  disabled={!values.walletId || connect.isPending}
+                  className="mt-6 h-14 rounded-full bg-gradient-to-r from-[#d99a5f] to-[#a8683a] text-sm font-bold text-primary-foreground disabled:opacity-60"
+                >
+                  {connect.isPending ? "Conectando..." : "Conectar carteira"}
+                </button>
+              )}
+            </section>
+          )}
+
+          {step === "form" && (
+            <section aria-labelledby="c-perfil" className="hidden gap-5 md:grid">
               <h1 id="c-perfil" className="text-base font-bold">
                 Perfil do colecionador
               </h1>
@@ -476,7 +626,7 @@ export function CheckoutPage() {
           {step === "review" && (
             <section
               aria-labelledby="c-revisao"
-              className="grid gap-4 bg-card p-6"
+              className="grid gap-4 rounded-2xl bg-card p-6 md:rounded-none"
             >
               <h2 id="c-revisao" className="text-lg font-bold">
                 Revisão do pedido
@@ -519,7 +669,7 @@ export function CheckoutPage() {
                   type="button"
                   onClick={onConfirm}
                   disabled={createOrder.isPending || q.issues.length > 0}
-                  className={button}
+                  className={cn(button, "max-md:h-14 max-md:flex-1 max-md:rounded-full max-md:text-base")}
                 >
                   {createOrder.isPending
                     ? "Enviando pedido..."
@@ -553,7 +703,10 @@ export function CheckoutPage() {
 
         <aside
           aria-label="Resumo do pedido"
-          className="grid content-start gap-4"
+          className={cn(
+            "content-start gap-4",
+            step === "form" ? "hidden md:grid" : "grid",
+          )}
         >
           <h2 className="text-base font-bold">Seus NFTs</h2>
 
