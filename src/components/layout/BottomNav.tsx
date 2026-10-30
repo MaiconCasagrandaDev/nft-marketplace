@@ -9,8 +9,7 @@ export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { data: cart } = useCart()
   const count = cart?.itemCount ?? 0
-  if (["/nft", "/cart", "/checkout"].some((p) => pathname.startsWith(p))) return null
-
+  if (["/nft", "/cart", "/checkout", "/login", "/register"].some((p) => pathname.startsWith(p))) return null
   return (
     <nav
       aria-label="Navegação inferior"

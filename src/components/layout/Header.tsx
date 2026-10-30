@@ -10,6 +10,7 @@ export function Header() {
   const isMarket = ["/nft", "/cart", "/checkout"].some((p) =>
     pathname.startsWith(p),
   );
+  const isAuth = ["/login", "/register"].some((p) => pathname.startsWith(p));
   const { data: cart } = useCart();
   const cartCount = cart?.itemCount ?? 0;
 
@@ -20,7 +21,7 @@ export function Header() {
     <header
       className={cn(
         "mx-auto w-full max-w-[1200px] px-4 pt-6 xl:px-0",
-        (isHome || isMarket) && "hidden md:block",
+        (isHome || isMarket || isAuth) && "hidden md:block",
       )}
     >
       <div className="flex h-11 items-stretch justify-between border-b-[0.3px] border-brand">

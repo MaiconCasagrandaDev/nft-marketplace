@@ -102,7 +102,7 @@ export function CartPage() {
   }
 
   return (
-    <div className="-mb-24 md:mb-0">
+    <div>
       <Breadcrumb />
       <MobileTop />
       <div className="grid gap-6 pb-0 pt-1 md:pb-12 md:pt-3 lg:grid-cols-[1fr_332px] lg:gap-[86px]">
